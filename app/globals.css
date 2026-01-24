@@ -1,0 +1,143 @@
+@import "tailwindcss";
+
+
+:root {
+  /* Base - Soft Blue Tint */
+  --background: #F2F6FF;
+  --foreground: #1E293B;
+  /* Slate 800 */
+
+  /* Primary - Indigo */
+  --primary: #4F46E5;
+  --primary-foreground: #FFFFFF;
+
+  /* Secondary - Cyan */
+  --secondary: #06B6D4;
+  --secondary-foreground: #FFFFFF;
+
+  /* Accent - Coral */
+  --accent: #F97316;
+  --accent-foreground: #FFFFFF;
+
+  /* Success */
+  --success: #22C55E;
+  --success-foreground: #FFFFFF;
+
+  /* Muted / Neutral */
+  --muted: #F1F5F9;
+  --muted-foreground: #64748B;
+
+  /* Card - Glassmorphism */
+  --card: rgba(255, 255, 255, 0.75);
+  --card-foreground: #1E293B;
+
+  /* Borders */
+  --border: #E2E8F0;
+  --input: #E2E8F0;
+  --ring: #4F46E5;
+
+  /* Radius */
+  --radius: 1.5rem;
+  /* rounded-3xl */
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, sans-serif;
+  overflow-x: hidden;
+}
+
+@keyframes blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+@keyframes scroll {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-scroll {
+  animation: scroll 20s linear infinite;
+}
+
+.pause-on-hover:hover .animate-scroll {
+  animation-play-state: paused;
+}
+
+.animate-spin-slow {
+  animation: spin 60s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
