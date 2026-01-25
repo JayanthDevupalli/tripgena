@@ -2,13 +2,14 @@
 
 import { useEffect, useState, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { doc, getDoc } from "firebase/firestore"
+import { doc, getDoc, updateDoc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { useAuth } from "@/components/auth/AuthProvider"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Share2, MapPin, Calendar, Wallet, Loader2, Clock, Train, Bus, Car, Plane, Hotel, Camera, Utensils, Navigation } from "lucide-react"
+import { ArrowLeft, MapPin, Loader2, Clock, Train, Bus, Car, Plane, Hotel, Camera, Utensils, Navigation, ChevronLeft, ChevronRight, Wallet, Sun, Cloud, CloudRain, CheckSquare, FileText, Download, Share2, Plus, Trash2 } from "lucide-react"
 import dynamic from "next/dynamic"
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
+import { Sparkles } from "lucide-react"
 
 // Dynamic Map import
 const TripMap = dynamic(() => import("@/components/TripMap"), {
@@ -17,7 +18,6 @@ const TripMap = dynamic(() => import("@/components/TripMap"), {
 })
 
 const getTripImage = (destination: string) => {
-    // Placeholder - real app would use Google Places Photo API or Unsplash API
     return "https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=1920"
 }
 
@@ -28,6 +28,12 @@ export default function TripDetailsPage() {
     const [trip, setTrip] = useState<any>(null)
     const [showMap, setShowMap] = useState(false)
     const [loading, setLoading] = useState(true)
+    const [activeDay, setActiveDay] = useState(1)
+
+    // --- Smart Packing Logic State ---
+    const [newItem, setNewItem] = useState("")
+    const [isAddingItem, setIsAddingItem] = useState(false)
+
     const scrollRef = useRef(null)
     const { scrollY } = useScroll()
     const heroOpacity = useTransform(scrollY, [0, 300], [1, 0])
@@ -41,7 +47,18 @@ export default function TripDetailsPage() {
                 const docRef = doc(db, "users", user.uid, "trips", id as string)
                 const docSnap = await getDoc(docRef)
                 if (docSnap.exists()) {
-                    setTrip({ id: docSnap.id, ...docSnap.data() })
+                    const data = docSnap.data()
+                    // Initialize packing list if not present
+                    if (!data.packingList) {
+                        data.packingList = [
+                            { item: "Passport / ID", checked: true },
+                            { item: "Power Bank", checked: false },
+                            { item: "Sunscreen", checked: false },
+                            { item: "Comfortable Shoes", checked: true },
+                            { item: "Camera", checked: false }
+                        ]
+                    }
+                    setTrip({ id: docSnap.id, ...data })
                 } else {
                     alert("Trip not found")
                     router.push("/dashboard")
@@ -66,10 +83,86 @@ export default function TripDetailsPage() {
 
     if (!trip) return null
 
+    const handleDayChange = (day: number) => {
+        setActiveDay(day)
+        window.scrollTo({ top: 400, behavior: "smooth" })
+    }
+
+    // --- Smart Packing Logic ---
+    // (State moved to top level)
+
+    const togglePackingItem = async (index: number) => {
+        if (!trip || !user) return
+        const updatedList = [...trip.packingList]
+        updatedList[index].checked = !updatedList[index].checked
+        setTrip({ ...trip, packingList: updatedList }) // Optimistic update
+
+        try {
+            const docRef = doc(db, "users", user.uid, "trips", trip.id)
+            await updateDoc(docRef, { packingList: updatedList })
+        } catch (error) {
+            console.error("Error updating packing list:", error)
+        }
+    }
+
+    const addPackingItem = async () => {
+        if (!newItem.trim() || !trip || !user) return
+        const updatedList = [...trip.packingList, { item: newItem, checked: false }]
+        setTrip({ ...trip, packingList: updatedList })
+        setNewItem("")
+        setIsAddingItem(false)
+
+        try {
+            const docRef = doc(db, "users", user.uid, "trips", trip.id)
+            await updateDoc(docRef, { packingList: updatedList })
+        } catch (error) {
+            console.error("Error adding packing item:", error)
+        }
+    }
+
+    const removePackingItem = async (index: number) => {
+        if (!trip || !user) return
+        const updatedList = trip.packingList.filter((_: any, i: number) => i !== index)
+        setTrip({ ...trip, packingList: updatedList })
+
+        try {
+            const docRef = doc(db, "users", user.uid, "trips", trip.id)
+            await updateDoc(docRef, { packingList: updatedList })
+        } catch (error) {
+            console.error("Error removing packing item:", error)
+        }
+    }
+
+    // --- Share Logic ---
+    const handleShare = async () => {
+        const shareData = {
+            title: `Trip to ${trip.destination}`,
+            text: `Check out my trip plan to ${trip.destination} on TripGena!`,
+            url: window.location.href,
+        }
+
+        if (navigator.share) {
+            try {
+                await navigator.share(shareData)
+            } catch (error) {
+                console.error("Error sharing:", error)
+            }
+        } else {
+            try {
+                await navigator.clipboard.writeText(window.location.href)
+                alert("Link copied to clipboard!")
+            } catch (err) {
+                alert("Failed to copy link.")
+            }
+        }
+    }
+
+    const currentDayData = trip.itinerary.find((d: any) => d.day === activeDay)
+
     return (
         <div className="flex flex-col min-h-screen bg-slate-50/50" ref={scrollRef}>
 
-            {/* 1. Parallax Hero Story */}
+            {/* 1. Parallax Hero */}
             <div className="relative h-[50vh] min-h-[400px] overflow-hidden">
                 <div className="absolute top-4 left-4 z-50">
                     <Button variant="secondary" size="icon" onClick={() => router.back()} className="rounded-full bg-white/20 backdrop-blur-md hover:bg-white text-white hover:text-slate-900 border border-white/20">
@@ -92,7 +185,7 @@ export default function TripDetailsPage() {
                 </motion.div>
 
                 <div className="absolute bottom-0 left-0 w-full p-8 md:p-12 z-20">
-                    <div className="max-w-5xl mx-auto">
+                    <div className="max-w-7xl mx-auto">
                         <motion.div
                             initial={{ y: 20, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
@@ -129,125 +222,258 @@ export default function TripDetailsPage() {
                 </div>
             </div>
 
-            {/* 2. Content Layout (Single Column) */}
-            <div className="flex-1 max-w-4xl mx-auto w-full p-4 lg:p-8 -mt-16 relative z-30">
-                <div className="space-y-8">
+            {/* 2. Content Layout (Grid) */}
+            <div className="flex-1 max-w-7xl mx-auto w-full p-4 lg:p-8 -mt-16 relative z-30">
+                <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8">
 
-                    {/* Summary Card */}
-                    <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/50 backdrop-blur-xl">
-                        <h2 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                            <SparklesIcon className="w-5 h-5 text-amber-400" /> Trip Overview
-                        </h2>
-                        <p className="text-slate-600 leading-relaxed text-lg mb-6">
-                            {trip.summary}
-                        </p>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
-                                <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-2">Estimated Cost</p>
-                                <p className="text-3xl font-black text-emerald-600 tracking-tight">₹{trip.totalCost?.toLocaleString()}</p>
+                    {/* LEFT COLUMN: Itinerary & Details */}
+                    <div className="space-y-8">
+                        {/* Stats Grid */}
+                        <div className="grid grid-cols-3 gap-3">
+                            <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-lg shadow-slate-200/50 flex flex-col items-center justify-center text-center">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Duration</span>
+                                <span className="text-xl font-black text-slate-800">{trip.duration}</span>
                             </div>
-                            <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
-                                <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-2">Travelers</p>
-                                <p className="text-3xl font-black text-slate-900 tracking-tight">{trip.travelers || 1} Pax</p>
+                            <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-lg shadow-slate-200/50 flex flex-col items-center justify-center text-center">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Travelers</span>
+                                <span className="text-xl font-black text-slate-800">{trip.travelers || 1}</span>
                             </div>
+                            <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-lg shadow-slate-200/50 flex flex-col items-center justify-center text-center">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Budget</span>
+                                <span className="text-xl font-black text-emerald-600">₹{trip.totalCost?.toLocaleString()}</span>
+                            </div>
+                        </div>
+
+                        {/* Summary Card */}
+                        <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/50 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-32 bg-indigo-50/50 rounded-full blur-3xl -mr-16 -mt-16" />
+                            <h2 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2 relative z-10">
+                                <Sparkles className="w-5 h-5 text-amber-400" /> Trip Overview
+                            </h2>
+                            <p className="text-slate-600 leading-relaxed text-lg relative z-10 font-medium">
+                                {trip.summary}
+                            </p>
+                        </div>
+
+                        {/* Selected Transport */}
+                        {trip.selectedTransport && (
+                            <div className="bg-indigo-600 text-white p-6 rounded-[2rem] shadow-xl shadow-indigo-500/20 relative overflow-hidden">
+                                <div className="absolute top-0 right-0 p-24 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10" />
+                                <div className="relative z-10 flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/20">
+                                            <ModeIcon mode={trip.selectedTransport.mode} />
+                                        </div>
+                                        <div>
+                                            <p className="text-indigo-200 text-xs font-bold uppercase tracking-wider mb-1">Travel Mode</p>
+                                            <h3 className="text-2xl font-black">{trip.selectedTransport.mode}</h3>
+                                            <p className="text-indigo-100 text-sm font-medium opacity-80">{trip.selectedTransport.details}</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-3xl font-black">₹{trip.selectedTransport.cost}</p>
+                                        <p className="text-indigo-200 text-sm font-medium">{trip.selectedTransport.duration}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* --- DAY TABS --- */}
+                        <div>
+                            <div className="flex items-center gap-2 overflow-x-auto pb-4 custom-scrollbar sticky top-4 z-40 bg-slate-50/95 backdrop-blur py-2 -mx-4 px-4 lg:mx-0 lg:px-0 lg:bg-transparent lg:backdrop-filter-none">
+                                {trip.itinerary.map((day: any) => (
+                                    <button
+                                        key={day.day}
+                                        onClick={() => handleDayChange(day.day)}
+                                        className={`shrink-0 px-6 py-3 rounded-full font-bold text-sm transition-all shadow-sm border ${activeDay === day.day
+                                            ? "bg-indigo-600 text-white border-indigo-600 shadow-indigo-200"
+                                            : "bg-white text-slate-500 border-slate-200 hover:border-indigo-300 hover:text-indigo-600"
+                                            }`}
+                                    >
+                                        Day {day.day}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* --- ACTIVE DAY CONTENT --- */}
+                            <AnimatePresence mode="wait">
+                                {currentDayData && (
+                                    <motion.div
+                                        key={activeDay}
+                                        initial={{ opacity: 0, x: 20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: -20 }}
+                                        transition={{ duration: 0.3 }}
+                                        className="bg-white rounded-[2.5rem] p-6 lg:p-8 shadow-xl shadow-slate-200/50 border border-slate-100 min-h-[400px]"
+                                    >
+                                        <div className="flex items-center gap-4 mb-8 pb-6 border-b border-slate-50">
+                                            <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-black text-2xl shadow-sm">
+                                                {currentDayData.day}
+                                            </div>
+                                            <div>
+                                                <h3 className="text-2xl font-black text-slate-900">{currentDayData.title}</h3>
+                                                <p className="text-slate-400 font-medium">Daily Plan</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-8 relative">
+                                            <div className="absolute left-[27px] top-4 bottom-4 w-0.5 bg-dashed border-l-2 border-slate-200 border-dashed z-0" />
+
+                                            {currentDayData.activities.map((act: any, idx: number) => (
+                                                <div key={idx} className="relative z-10 grid grid-cols-[auto_1fr] gap-6 group">
+                                                    <div className="w-14 h-14 rounded-full bg-white border-4 border-slate-50 shadow-md flex items-center justify-center z-10 relative">
+                                                        <ActivityIcon type={act.type || 'Activity'} />
+                                                    </div>
+                                                    <div className="bg-slate-50/50 hover:bg-white p-6 rounded-3xl border border-slate-100 hover:shadow-lg transition-all group-hover:scale-[1.01] duration-300">
+                                                        <div className="flex justify-between items-start mb-2">
+                                                            <h4 className="font-bold text-slate-900 text-lg">{act.activity}</h4>
+                                                            <span className="text-xs font-bold bg-white text-slate-500 px-3 py-1 rounded-full border border-slate-100 shadow-sm">{act.time}</span>
+                                                        </div>
+                                                        {act.logistics && (
+                                                            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-indigo-100/50 text-indigo-700 rounded-lg text-xs font-bold mb-4">
+                                                                <Navigation className="w-3 h-3" /> {act.logistics}
+                                                            </div>
+                                                        )}
+                                                        <div className="flex items-center gap-6 text-sm font-medium text-slate-500">
+                                                            <span className="flex items-center gap-1.5"><Wallet className="w-4 h-4 text-emerald-500" /> ₹{act.cost}</span>
+                                                            {act.locationName && (
+                                                                <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4 text-rose-500" /> {act.locationName}</span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        <div className="flex items-center justify-between mt-12 pt-8 border-t border-slate-50">
+                                            <Button
+                                                variant="ghost"
+                                                onClick={() => handleDayChange(Math.max(1, activeDay - 1))}
+                                                disabled={activeDay === 1}
+                                                className="text-slate-400 hover:text-slate-900"
+                                            >
+                                                <ChevronLeft className="w-4 h-4 mr-2" /> Previous Day
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                onClick={() => handleDayChange(Math.min(trip.itinerary.length, activeDay + 1))}
+                                                disabled={activeDay === trip.itinerary.length}
+                                                className="text-slate-400 hover:text-slate-900"
+                                            >
+                                                Next Day <ChevronRight className="w-4 h-4 ml-2" />
+                                            </Button>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </div>
                     </div>
 
-                    {/* Transport Options */}
-                    {trip.transportOptions && (
-                        <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
-                            <h3 className="font-bold text-slate-900 mb-4 px-2">How to reach</h3>
-                            <div className="space-y-3">
-                                {trip.transportOptions.map((opt: any, i: number) => (
-                                    <div key={i} className="flex items-center justify-between p-4 rounded-2xl border border-slate-100 hover:border-indigo-100 hover:bg-indigo-50/30 transition-colors group cursor-pointer">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-2xl bg-slate-50 text-slate-600 flex items-center justify-center group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors">
-                                                <ModeIcon mode={opt.mode} />
-                                            </div>
-                                            <div>
-                                                <p className="font-bold text-slate-900">{opt.mode} <span className="text-slate-400 font-normal ml-2 text-xs">{opt.details}</span></p>
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="font-bold text-slate-900">₹{opt.cost}</p>
-                                            <p className="text-xs text-slate-500">{opt.duration}</p>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
+                    {/* RIGHT COLUMN: Utilities Sidebar */}
+                    <div className="space-y-6">
 
-                    {/* Timeline */}
-                    <div className="pl-4">
-                        {trip.itinerary.map((day: any) => (
-                            <div key={day.day} className="relative pb-12 last:pb-0">
-                                {/* Sticky Day Header */}
-                                <div className="sticky top-24 z-20 mb-8 -ml-4">
-                                    <div className="inline-flex items-center gap-3 bg-slate-900/90 backdrop-blur-md py-2 px-5 rounded-full text-white shadow-xl shadow-slate-900/20 border border-white/10">
-                                        <span className="font-black">Day {day.day}</span>
-                                        <span className="w-1 h-1 bg-white/50 rounded-full" />
-                                        <span className="font-medium text-slate-200">{day.title}</span>
+                        {/* 1. Map Card (Small) */}
+                        <div onClick={() => setShowMap(true)} className="group bg-white rounded-3xl p-2 border border-slate-100 shadow-lg shadow-slate-200/50 cursor-pointer transition-transform hover:scale-[1.02]">
+                            <div className="h-40 bg-slate-100 rounded-2xl relative overflow-hidden">
+                                <div className="absolute inset-0 flex items-center justify-center bg-slate-900/10 group-hover:bg-slate-900/20 transition-colors">
+                                    <div className="bg-white/90 backdrop-blur px-4 py-2 rounded-full font-bold text-xs shadow-sm flex items-center gap-2">
+                                        <MapPin className="w-3 h-3 text-indigo-600" /> View Map
                                     </div>
                                 </div>
+                            </div>
+                        </div>
 
-                                {/* Vertical Connector */}
-                                <div className="absolute left-[26px] top-14 bottom-0 w-0.5 bg-dashed border-l-2 border-slate-200 border-dashed z-0" />
-
-                                <div className="space-y-6 relative z-10 pl-2">
-                                    {day.activities.map((act: any, idx: number) => (
-                                        <div key={idx} className="flex gap-6 group">
-                                            {/* Icon Node */}
-                                            <div className="shrink-0 w-12 h-12 rounded-full border-4 border-slate-50 bg-white shadow-sm flex items-center justify-center relative translate-y-2 z-10">
-                                                <ActivityIcon type={act.type || 'Activity'} />
-                                            </div>
-
-                                            {/* Card */}
-                                            <div className="flex-1 bg-white p-6 rounded-[2rem] border border-slate-100 shadow-[0_2px_20px_-8px_rgba(0,0,0,0.06)] hover:shadow-xl hover:border-indigo-100 hover:-translate-y-1 transition-all cursor-default relative overflow-hidden group-hover:bg-slate-50/50">
-                                                <div className="flex justify-between items-start mb-3 relative z-10">
-                                                    <h4 className="font-bold text-slate-900 text-lg leading-tight">{act.activity}</h4>
-                                                    <span className="text-xs font-bold bg-slate-100 text-slate-500 px-2 py-1 rounded-lg shrink-0 ml-2">{act.time}</span>
-                                                </div>
-
-                                                {act.logistics && (
-                                                    <div className="mb-4 px-4 py-3 bg-indigo-50/80 rounded-xl text-xs font-medium text-indigo-800 flex items-start gap-2 border border-indigo-100/50 relative z-10">
-                                                        <Navigation className="w-3.5 h-3.5 shrink-0 mt-0.5 text-indigo-600" />
-                                                        {act.logistics}
-                                                    </div>
-                                                )}
-
-                                                <div className="flex items-center gap-4 text-xs font-medium text-slate-400 relative z-10">
-                                                    <span className="flex items-center gap-1"><Wallet className="w-3 h-3" /> ₹{act.cost}</span>
-                                                    {act.locationName && (
-                                                        <span className="flex items-center gap-1 text-slate-500"><MapPin className="w-3 h-3" /> {act.locationName}</span>
-                                                    )}
-                                                </div>
-                                            </div>
+                        {/* 2. Weather Widget (Mocked) */}
+                        <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl p-6 text-white shadow-lg shadow-blue-500/20 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-16 bg-white/10 rounded-full blur-2xl -mr-8 -mt-8" />
+                            <div className="relative z-10">
+                                <h4 className="text-xs font-bold text-blue-100 uppercase tracking-wider mb-4">Forecast</h4>
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <div className="text-4xl font-black mb-1">28°C</div>
+                                        <p className="font-medium text-blue-100 flex items-center gap-1"><Sun className="w-4 h-4" /> Sunny</p>
+                                    </div>
+                                    <Sun className="w-12 h-12 text-yellow-300 animate-pulse-slow" />
+                                </div>
+                                <div className="mt-6 flex justify-between text-center gap-2">
+                                    {['Mon', 'Tue', 'Wed'].map(d => (
+                                        <div key={d} className="bg-white/10 rounded-xl p-2 flex-1 backdrop-blur-sm">
+                                            <p className="text-[10px] font-bold opacity-80 mb-1">{d}</p>
+                                            <Cloud className="w-4 h-4 mx-auto mb-1 opacity-80" />
+                                            <p className="text-xs font-bold">26°</p>
                                         </div>
                                     ))}
                                 </div>
                             </div>
-                        ))}
+                        </div>
+
+                        {/* 3. Packing List (Interactive) */}
+                        <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-xl shadow-slate-200/20">
+                            <h4 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                                <CheckSquare className="w-5 h-5 text-indigo-500" /> Smart Packing
+                            </h4>
+                            <div className="space-y-3">
+                                {trip.packingList?.map((p: any, i: number) => (
+                                    <div key={i} className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100 group">
+                                        <button
+                                            onClick={() => togglePackingItem(i)}
+                                            className={`w-5 h-5 rounded-md border flex items-center justify-center transition-colors ${p.checked ? "bg-indigo-500 border-indigo-500" : "bg-white border-slate-300 hover:border-indigo-400"}`}
+                                        >
+                                            {p.checked && <span className="text-white text-xs">✓</span>}
+                                        </button>
+                                        <span className={`flex-1 text-sm font-bold truncate ${p.checked ? "text-slate-400 line-through" : "text-slate-700"}`}>{p.item}</span>
+                                        <button onClick={() => removePackingItem(i)} className="text-slate-300 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {isAddingItem ? (
+                                <div className="mt-4 flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={newItem}
+                                        onChange={(e) => setNewItem(e.target.value)}
+                                        onKeyDown={(e) => e.key === 'Enter' && addPackingItem()}
+                                        placeholder="Add item..."
+                                        autoFocus
+                                        className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                                    />
+                                    <Button size="sm" onClick={addPackingItem} className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg">Add</Button>
+                                </div>
+                            ) : (
+                                <Button
+                                    variant="ghost"
+                                    onClick={() => setIsAddingItem(true)}
+                                    className="w-full mt-4 text-indigo-600 text-xs font-bold hover:bg-indigo-50"
+                                >
+                                    + Add Item
+                                </Button>
+                            )}
+                        </div>
+
+                        {/* 4. Docs Actions */}
+                        <div className="grid grid-cols-2 gap-3">
+                            <Button variant="outline" className="h-14 rounded-2xl border-slate-200 hover:border-indigo-200 hover:bg-indigo-50 text-slate-600 hover:text-indigo-600 flex flex-col items-center justify-center gap-1">
+                                <FileText className="w-5 h-5" />
+                                <span className="text-[10px] font-bold uppercase">Tickets</span>
+                            </Button>
+                            <Button
+                                variant="outline"
+                                onClick={handleShare}
+                                className="h-14 rounded-2xl border-slate-200 hover:border-indigo-200 hover:bg-indigo-50 text-slate-600 hover:text-indigo-600 flex flex-col items-center justify-center gap-1"
+                            >
+                                <Share2 className="w-5 h-5" />
+                                <span className="text-[10px] font-bold uppercase">Share</span>
+                            </Button>
+                        </div>
+
                     </div>
                 </div>
             </div>
 
-            {/* 3. Floating Map Button */}
-            <div className="fixed bottom-8 right-8 z-40">
-                <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setShowMap(true)}
-                    className="bg-slate-900 text-white rounded-full h-16 px-6 shadow-2xl shadow-indigo-500/30 flex items-center gap-3 border-2 border-white/10 backdrop-blur-xl"
-                >
-                    <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-                        <MapPin className="w-4 h-4" />
-                    </div>
-                    <span className="font-bold text-lg pr-1">Map</span>
-                </motion.button>
-            </div>
-
-            {/* 4. Map Overlay */}
+            {/* 4. Map Overlay (Floating button removed in favor of sidebar widget, OR keep focused map) */}
             <AnimatePresence>
                 {showMap && (
                     <motion.div
@@ -282,7 +508,7 @@ export default function TripDetailsPage() {
 
 // Helpers
 const ModeIcon = ({ mode }: { mode: string }) => {
-    const m = mode.toLowerCase()
+    const m = mode?.toLowerCase() || ""
     if (m.includes("train")) return <Train className="w-5 h-5" />
     if (m.includes("bus")) return <Bus className="w-5 h-5" />
     if (m === "car" || m.includes("taxi")) return <Car className="w-5 h-5" />
@@ -291,14 +517,10 @@ const ModeIcon = ({ mode }: { mode: string }) => {
 }
 
 const ActivityIcon = ({ type }: { type: string }) => {
-    if (!type) return <Camera className="w-5 h-5 text-slate-500" />
+    if (!type) return <Camera className="w-6 h-6 text-slate-400" />
     const t = type.toLowerCase()
-    if (t === 'travel') return <Navigation className="w-5 h-5 text-blue-500" />
-    if (t === 'stay') return <Hotel className="w-5 h-5 text-purple-500" />
-    if (t === 'food') return <Utensils className="w-5 h-5 text-orange-500" />
-    return <Camera className="w-5 h-5 text-emerald-500" />
+    if (t === 'travel') return <Navigation className="w-6 h-6 text-blue-500" />
+    if (t === 'stay') return <Hotel className="w-6 h-6 text-purple-500" />
+    if (t === 'food') return <Utensils className="w-6 h-6 text-orange-500" />
+    return <Camera className="w-6 h-6 text-emerald-500" />
 }
-
-const SparklesIcon = ({ className }: { className?: string }) => (
-    <svg className={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" /><path d="M5 3v4" /><path d="M9 3v4" /><path d="M7 3v4" /><path d="M3 7h4" /><path d="M3 5h4" /></svg>
-)

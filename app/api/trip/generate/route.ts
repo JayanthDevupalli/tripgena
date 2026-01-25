@@ -18,6 +18,11 @@ export async function POST(req: Request) {
         const startDate = tripOptions?.startDate || "Tomorrow";
         const transportMode = tripOptions?.transport || "Any";
 
+        // Advanced Options
+        const accommodation = tripOptions?.accommodation || "Any";
+        const pace = tripOptions?.pace || "Balanced";
+        const dietary = tripOptions?.dietary || "Any";
+
         const style = userProfile?.preferences?.style || "General";
         const interests = userProfile?.preferences?.interests?.join(", ") || "Everything";
         const userOrigin = origin || "India";
@@ -36,6 +41,11 @@ export async function POST(req: Request) {
       - Total Budget Limit: ₹${budget} (Strictly adhere to this for the WHOLE trip including travel for ${travelers} people).
       - Vibe: ${style}
       - Interests: ${interests}
+      
+      **Advanced Preferences:**
+      - Accommodation Preference: ${accommodation} (e.g. if "Hostel", suggest Zostel/Backpacker hostels. If "Luxury", suggest Resorts).
+      - Trip Pace: ${pace} (If "Relaxed", fewer activities, more chill time. If "Packed", maximize sightseeing).
+      - Dietary Preference: ${dietary} (Ensure food suggestions align with this. If "Veg", do not suggest non-veg famous places unless they have good veg options).
 
       **Response Format:**
       You must return STRICT JSON only. Do not add markdown backticks.

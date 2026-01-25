@@ -60,7 +60,16 @@ export async function POST(req: Request) {
 
         const result = await model.generateContent(prompt);
         const response = await result.response;
-        const text = response.text().replace(/```json/g, "").replace(/```/g, "").trim();
+        let text = response.text();
+
+        // Cleanup Markdown
+        text = text.replace(/```json/g, "").replace(/```/g, "");
+
+        // robust extraction
+        const jsonMatch = text.match(/\[[\s\S]*\]/);
+        if (jsonMatch) {
+            text = jsonMatch[0];
+        }
 
         return NextResponse.json(JSON.parse(text));
 

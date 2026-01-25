@@ -85,14 +85,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         </div>
 
                         {/* Quick Search */}
-                        <div className="mb-6 relative">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                            <input
-                                type="text"
-                                placeholder="Jump to..."
-                                className="w-full bg-white/50 border border-slate-200/50 rounded-xl py-3 pl-10 pr-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all placeholder:text-slate-400"
-                            />
-                        </div>
+
 
                         {/* Navigation */}
                         <nav className="space-y-2 flex-1">

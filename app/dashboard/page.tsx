@@ -41,14 +41,15 @@ export default function DashboardPage() {
     return (
         <div className="space-y-12">
 
+
             {/* --- 1. Cinematic Hero Section --- */}
             <div className="relative rounded-[2.5rem] overflow-hidden min-h-[400px] flex items-center shadow-2xl shadow-indigo-500/20 group">
                 {/* Background Image with Parallax-ish feel */}
                 <div
-                    className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center transition-transform duration-1000 group-hover:scale-105"
+                    className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=2021&auto=format&fit=crop')] bg-cover bg-center transition-transform duration-1000 group-hover:scale-105"
                 />
                 {/* Gradient Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-r from-slate-900/90 via-slate-900/40 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-r from-slate-900/95 via-slate-900/60 to-transparent" />
 
                 {/* Content */}
                 <div className="relative z-10 p-10 md:p-14 w-full max-w-3xl">
@@ -59,18 +60,18 @@ export default function DashboardPage() {
                     >
                         <div className="flex items-center gap-2 mb-4">
                             <span className="bg-white/20 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-full border border-white/20 flex items-center gap-1">
-                                <Flame className="w-3 h-3 text-orange-400" />
-                                Ready for adventure?
+                                <Sparkles className="w-3 h-3 text-yellow-300" />
+                                AI-Powered Planner
                             </span>
                         </div>
 
                         <h1 className="text-5xl md:text-6xl font-black text-white leading-tight mb-4 tracking-tight drop-shadow-lg">
-                            Hey, {profile?.displayName?.split(" ")[0] || "Traveler"}. <br />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-300">Where next?</span>
+                            Hi, {profile?.displayName?.split(" ")[0] || "Traveler"}. <br />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-300">Ready to explore?</span>
                         </h1>
 
                         <p className="text-slate-200 text-lg font-medium mb-8 max-w-lg leading-relaxed shadow-sm">
-                            Your budget of <span className="text-white font-bold">₹{profile?.preferences?.budget?.toLocaleString()}</span> is ready. Let's find you a hidden gem.
+                            Let's turn your dream destination into a complete itinerary. Just tell us where you want to go.
                         </p>
 
                         {/* Interactive Quick Input */}
@@ -80,7 +81,7 @@ export default function DashboardPage() {
                                 value={quickPrompt}
                                 onChange={(e) => setQuickPrompt(e.target.value)}
                                 onKeyDown={(e) => e.key === "Enter" && handleQuickStart()}
-                                placeholder="Type a vibe (e.g., 'Chill beach trip')..."
+                                placeholder="Where do you want to go? (e.g. 'Paris in Spring')"
                                 className="bg-transparent border-none text-white placeholder:text-white/60 text-lg font-medium w-full focus:outline-none"
                             />
                             <Button
@@ -95,23 +96,53 @@ export default function DashboardPage() {
                 </div>
             </div>
 
-            {/* --- 2. Floating Stats (Glassmorphism) --- */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 -mt-16 relative z-20 px-4">
-                <StatWidget icon={Wallet} label="Budget" value={`₹${profile?.preferences?.budget?.toLocaleString()}`} color="text-emerald-400" />
-                <StatWidget icon={Compass} label="Style" value={profile?.preferences?.style} color="text-violet-400" />
-                <div className="col-span-2 md:col-span-2 bg-slate-900 text-white p-5 rounded-2xl border border-slate-700 shadow-xl flex items-center justify-between group cursor-pointer hover:border-indigo-500 transition-colors"
-                    onClick={() => router.push("/dashboard/explore")}
-                >
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                            <MapIcon className="w-6 h-6 text-white" />
+            {/* --- 2. Action Console --- */}
+            <div className="px-4 mt-8">
+                <div className="bg-white border border-slate-100 shadow-xl shadow-slate-200/50 rounded-3xl p-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+
+                    {/* Main Action: Plan New Trip */}
+                    <div
+                        className="col-span-1 md:col-span-2 bg-slate-900 text-white p-5 rounded-2xl shadow-lg flex items-center justify-between group cursor-pointer hover:scale-[1.01] transition-all duration-300"
+                        onClick={() => router.push("/dashboard/create")}
+                    >
+                        <div className="flex items-center gap-4">
+                            <div className="w-14 h-14 rounded-2xl bg-indigo-500/20 flex items-center justify-center border border-white/10">
+                                <Compass className="w-7 h-7 text-indigo-300" />
+                            </div>
+                            <div>
+                                <p className="font-bold text-xl leading-tight">Plan New Trip</p>
+                                <p className="text-slate-400 text-sm font-medium">Start from scratch</p>
+                            </div>
                         </div>
-                        <div>
-                            <p className="font-bold text-lg">Explore Map</p>
-                            <p className="text-slate-400 text-xs">Find places near you</p>
+                        <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white group-hover:text-slate-900 transition-all">
+                            <ArrowRight className="w-5 h-5" />
                         </div>
                     </div>
-                    <ArrowRight className="w-5 h-5 text-slate-500 group-hover:text-white transition-colors" />
+
+                    {/* Explore Map Card */}
+                    <div
+                        className="col-span-1 md:col-span-1 bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between group cursor-pointer hover:border-indigo-200 hover:shadow-md transition-all hover:-translate-y-1"
+                        onClick={() => router.push("/dashboard/explore")}
+                    >
+                        <div className="flex justify-between items-start mb-1 leading-none">
+                            <div className="w-12 h-12 rounded-2xl bg-orange-50 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <MapIcon className="w-6 h-6 text-orange-500" />
+                            </div>
+                            <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-orange-500 transition-colors" />
+                        </div>
+                        <div>
+                            <p className="font-bold text-slate-900 text-lg">Explore</p>
+                            <p className="text-slate-500 text-xs font-medium">Discover Places</p>
+                        </div>
+                    </div>
+
+                    {/* Budget Stat */}
+                    <StatWidget
+                        icon={Wallet}
+                        label="Travel Budget"
+                        value={`₹${profile?.preferences?.budget?.toLocaleString()}`}
+                        color="text-emerald-500 bg-emerald-50"
+                    />
                 </div>
             </div>
 
@@ -133,37 +164,58 @@ export default function DashboardPage() {
                             key={trip.id}
                         >
                             <Link href={`/dashboard/trips/${trip.id}`} className="group block h-full">
-                                <div className="bg-white rounded-[2rem] p-4 border border-slate-100 shadow-sm hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-300 h-full flex flex-col relative overflow-hidden">
-                                    <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
-                                        <Sparkles className="w-24 h-24 text-indigo-600" />
-                                    </div>
+                                <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] transition-all duration-500 h-full flex flex-col relative overflow-hidden group-hover:-translate-y-1">
 
-                                    <div className="flex justify-between items-start mb-4 relative z-10">
-                                        <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-xl font-black text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                                            {trip.tripName.charAt(0)}
+                                    {/* Abstract Header Gradient */}
+                                    <div className="h-32 bg-slate-900 relative overflow-hidden">
+                                        <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/20 to-purple-500/20 mix-blend-overlay" />
+                                        <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-500 rounded-full blur-[50px] opacity-20 group-hover:opacity-40 transition-opacity" />
+
+                                        <div className="absolute top-4 right-4 animate-fade-in">
+                                            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest backdrop-blur-md border border-white/10 shadow-lg ${trip.status === 'draft' ? 'bg-amber-500/20 text-amber-200' : 'bg-emerald-500/20 text-emerald-200'
+                                                }`}>
+                                                {trip.status || 'Draft'}
+                                            </span>
                                         </div>
-                                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${trip.status === 'draft' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
-                                            {trip.status || 'Draft'}
-                                        </span>
-                                    </div>
 
-                                    <h4 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-indigo-600 transition-colors line-clamp-1">{trip.tripName}</h4>
-                                    <p className="text-sm text-slate-500 line-clamp-2 mb-4 flex-1">{trip.summary}</p>
-
-                                    <div className="flex items-center justify-between pt-4 border-t border-slate-50">
-                                        <p className="font-bold text-slate-900">₹{trip.totalCost?.toLocaleString()}</p>
-                                        <div className="w-8 h-8 rounded-full border border-slate-100 flex items-center justify-center group-hover:bg-indigo-50 transition-colors">
-                                            <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600" />
+                                        <div className="absolute bottom-4 left-6">
+                                            <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white font-black text-xl shadow-lg mb-2">
+                                                {trip.tripName.charAt(0)}
+                                            </div>
                                         </div>
                                     </div>
+
+                                    {/* Content Body */}
+                                    <div className="p-6 pt-4 flex flex-col flex-1">
+                                        <h4 className="text-xl font-black text-slate-800 mb-2 leading-tight group-hover:text-indigo-600 transition-colors line-clamp-1">{trip.tripName}</h4>
+                                        <p className="text-sm text-slate-500 line-clamp-2 mb-6 flex-1 font-medium leading-relaxed">
+                                            {trip.summary || "No summary available for this trip yet. Click to view details."}
+                                        </p>
+
+                                        <div className="flex items-center justify-between mt-auto">
+                                            <div className="flex flex-col">
+                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Estimated Cost</span>
+                                                <span className="font-black text-slate-900 text-lg">₹{trip.totalCost?.toLocaleString() ?? "0"}</span>
+                                            </div>
+                                            <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300 shadow-sm group-hover:shadow-indigo-200">
+                                                <ArrowRight className="w-5 h-5" />
+                                            </div>
+                                        </div>
+                                    </div>
+
                                 </div>
                             </Link>
                         </motion.div>
                     )) : (
-                        <div className="col-span-3 bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-200 p-12 text-center">
-                            <Sparkles className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                            <p className="text-slate-500 font-medium">Your travel journal is empty.</p>
-                            <p className="text-sm text-slate-400">Start a new chat to plan your first trip!</p>
+                        <div className="col-span-3 bg-white rounded-[2rem] border border-dashed border-slate-200 p-12 text-center hover:bg-slate-50/50 transition-colors">
+                            <div className="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Sparkles className="w-8 h-8 text-indigo-400" />
+                            </div>
+                            <h3 className="text-xl font-bold text-slate-900 mb-2">No trips saved yet</h3>
+                            <p className="text-slate-500 mb-6 max-w-sm mx-auto">Start a conversation with our AI planner to generate your first custom itinerary.</p>
+                            <Button onClick={() => router.push("/dashboard/create")} className="bg-slate-900 text-white rounded-xl font-bold font-sm">
+                                Create New Trip
+                            </Button>
                         </div>
                     )}
                 </div>
@@ -178,12 +230,19 @@ export default function DashboardPage() {
 }
 
 function StatWidget({ icon: Icon, label, value, color }: any) {
+    const iconColor = color.includes("text-") ? color : "text-indigo-600"
+    const bgClass = color.includes("bg-") ? color.split(" ").find((c: string) => c.startsWith("bg-")) : "bg-indigo-50"
+
     return (
-        <div className="bg-white/80 backdrop-blur-md p-4 rounded-2xl border border-white/40 shadow-lg flex flex-col items-center text-center justify-center gap-2 hover:scale-105 transition-transform cursor-default">
-            <Icon className={`w-6 h-6 ${color}`} />
+        <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between hover:-translate-y-1 transition-transform cursor-default h-full hover:shadow-md hover:border-indigo-200">
+            <div className="flex justify-between items-start mb-1">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${bgClass}`}>
+                    <Icon className={`w-6 h-6 ${iconColor.replace(bgClass, "").trim()}`} />
+                </div>
+            </div>
             <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{label}</p>
-                <p className="text-sm font-black text-slate-800 truncate px-2">{value}</p>
+                <p className="text-lg font-black text-slate-900 truncate">{value}</p>
+                <p className="text-xs font-medium text-slate-500">{label}</p>
             </div>
         </div>
     )
