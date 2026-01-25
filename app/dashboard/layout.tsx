@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
@@ -13,11 +13,13 @@ import {
     Menu,
     X,
     Sparkles,
-    Search
+    Search,
+    Loader2
 } from "lucide-react"
 import { signOut } from "firebase/auth"
 import { auth } from "@/lib/firebase"
 import { Button } from "@/components/ui/button"
+import { useAuth } from "@/components/auth/AuthProvider"
 
 const sidebarItems = [
     { label: "Overview", icon: LayoutDashboard, href: "/dashboard" },
@@ -30,11 +32,28 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const pathname = usePathname()
     const router = useRouter()
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+    const { user, loading } = useAuth()
+
+    useEffect(() => {
+        if (!loading && !user) {
+            router.replace("/login")
+        }
+    }, [user, loading, router])
 
     const handleLogout = async () => {
         await signOut(auth)
         router.replace("/")
     }
+
+    if (loading) {
+        return (
+            <div className="flex h-screen w-full items-center justify-center bg-[#F8FAFC]">
+                <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
+            </div>
+        )
+    }
+
+    if (!user) return null
 
     return (
         <div className="min-h-screen bg-[#F8FAFC] text-slate-900 relative selection:bg-indigo-500/30 font-sans overflow-x-hidden">
@@ -49,7 +68,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="relative z-10 flex min-h-screen">
 
                 {/* --- Desktop Glass Sidebar (Floating) --- */}
-                <aside className="hidden md:flex flex-col w-80 p-6 fixed h-full pointer-events-none z-50">
+                <aside className="hidden md:flex flex-col w-72 p-4 fixed h-full pointer-events-none z-50">
                     <div className="bg-white/60 backdrop-blur-2xl border border-white/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[2rem] h-full flex flex-col p-6 pointer-events-auto transition-all duration-500 hover:shadow-[0_8px_40px_rgb(0,0,0,0.08)]">
                         {/* Brand */}
                         <div className="flex items-center gap-4 mb-10 px-2 mt-2">
@@ -150,8 +169,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </AnimatePresence>
 
                 {/* --- Main Content --- */}
-                <main className="flex-1 md:pl-80 pt-20 md:pt-0 min-h-screen">
-                    <div className="max-w-[1600px] mx-auto p-4 md:p-8 lg:p-12">
+                <main className="flex-1 md:pl-72 pt-20 md:pt-0 min-h-screen">
+                    <div className="max-w-[1600px] mx-auto p-4 md:p-6 lg:p-8">
                         {children}
                     </div>
                 </main>

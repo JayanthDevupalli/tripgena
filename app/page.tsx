@@ -2,520 +2,366 @@
 
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { motion, useScroll, useMotionValueEvent, AnimatePresence } from "framer-motion"
-import { ArrowRight, MapPin, Sparkles, Plane, Map, Wallet, Send, User, Compass, Menu, Search, Calendar, Star, CheckCircle2, Utensils, Tent, Hotel, Music, Coffee, Palmtree, Waves } from "lucide-react"
-import { useState, useEffect } from "react"
+import { Badge } from "@/components/ui/badge"
+import { motion, useScroll, useTransform, useSpring, useMotionValueEvent, AnimatePresence } from "framer-motion"
+import { ArrowRight, MapPin, Sparkles, Plane, Map, Wallet, Send, User, Compass, Menu, Search, Calendar, Star, CheckCircle2, Utensils, Tent, Hotel, Music, Coffee, Palmtree, Waves, Mountain, Camera, Zap } from "lucide-react"
+import { useState, useEffect, useRef } from "react"
 import { cn } from "@/lib/utils"
+
+// --- Components ---
+
+const FloatingCard = ({ icon: Icon, title, subtitle, className, delay }: { icon: any, title: string, subtitle: string, className?: string, delay: number }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay, duration: 0.8, ease: "backOut" }}
+    className={cn(
+      "absolute p-4 rounded-2xl bg-white/80 backdrop-blur-xl border border-white/60 shadow-xl flex items-center gap-3 select-none pointer-events-none hover:scale-105 transition-transform",
+      className
+    )}
+  >
+    <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center">
+      <Icon className="w-5 h-5 text-indigo-500" />
+    </div>
+    <div>
+      <p className="text-xs font-bold opacity-70 uppercase tracking-wider">{title}</p>
+      <p className="font-bold">{subtitle}</p>
+    </div>
+  </motion.div>
+)
+
+const DestinationCard = ({ name, price, img, vibe, delay }: { name: string, price: string, img: string, vibe: string, delay: number }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 40 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true }}
+    transition={{ delay, duration: 0.6 }}
+    whileHover={{ y: -10 }}
+    className="relative group bg-white rounded-3xl p-3 shadow-lg hover:shadow-2xl transition-all duration-300"
+  >
+    <div className="relative aspect-[3/4] overflow-hidden rounded-2xl mb-4">
+      <div className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110" style={{ backgroundImage: `url('${img}')` }} />
+      <div className="absolute top-3 right-3 bg-white/30 backdrop-blur-md border border-white/20 p-2 rounded-full text-white cursor-pointer hover:bg-white hover:text-red-500 transition-colors">
+        <Star className="w-4 h-4" />
+      </div>
+      <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-white flex items-center gap-1">
+        <Sparkles className="w-3 h-3 text-yellow-400" /> {vibe}
+      </div>
+    </div>
+
+    <div className="px-2 pb-2">
+      <div className="flex justify-between items-start mb-2">
+        <h3 className="text-xl font-bold text-slate-900">{name}</h3>
+        <div className="flex items-center gap-1 text-yellow-500 text-xs font-bold bg-yellow-50 px-2 py-1 rounded-lg">
+          4.8 <Star className="w-3 h-3 fill-current" />
+        </div>
+      </div>
+      <div className="flex items-center justify-between">
+        <p className="text-slate-400 text-sm font-medium">3 Days / 2 Nights</p>
+        <p className="text-indigo-600 font-black text-lg">{price}</p>
+      </div>
+    </div>
+  </motion.div>
+)
 
 export default function Home() {
   const { scrollY } = useScroll()
   const [scrolled, setScrolled] = useState(false)
-  const [displayText, setDisplayText] = useState("")
-  const [isTyping, setIsTyping] = useState(true)
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
-  const PROMPT_TEXT = "Plan a 3-day trip to Goa under ₹6000 with friends. We love food and beaches."
-  const TYPING_SPEED = 40
-
-  useMotionValueEvent(scrollY, "change", (latest) => {
-    setScrolled(latest > 20)
-  })
+  // Curated High-Quality Travel Images (Internet-style)
+  const heroImages = [
+    "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=2670&auto=format&fit=crop", // Switzerland/Mountains
+    "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=2673&auto=format&fit=crop", // Beach/Tropical
+    "https://images.unsplash.com/photo-1496531693211-31c5234a5ea9?q=80&w=2670&auto=format&fit=crop", // European City/Night
+    "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=2621&auto=format&fit=crop"  // Road Trip/Adventure
+  ]
 
   useEffect(() => {
-    // Reset typing on mount
-    setDisplayText("")
-    setIsTyping(true)
+    const timer = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % heroImages.length)
+    }, 5000)
+    return () => clearInterval(timer)
+  }, [heroImages.length])
 
-    let currentIndex = 0
-    const interval = setInterval(() => {
-      if (currentIndex <= PROMPT_TEXT.length) {
-        setDisplayText(PROMPT_TEXT.slice(0, currentIndex))
-        currentIndex++
-      } else {
-        setIsTyping(false)
-        clearInterval(interval)
-      }
-    }, TYPING_SPEED)
-
-    return () => clearInterval(interval)
-  }, [])
-
-
+  useMotionValueEvent(scrollY, "change", (latest) => {
+    setScrolled(latest > 50)
+  })
 
   return (
-    <main className="min-h-screen bg-[#F2F6FF] selection:bg-indigo-500/30 text-slate-900 overflow-x-hidden">
+    <main className="min-h-screen bg-slate-50 selection:bg-indigo-500/30 text-slate-900 overflow-x-hidden font-sans">
 
       {/* --- Navbar --- */}
       <motion.header
         className={cn(
-          "fixed top-0 left-0 right-0 z-50 flex justify-center transition-all duration-300 ease-in-out",
+          "fixed top-0 left-0 right-0 z-50 flex justify-center transition-all duration-300",
           scrolled ? "pt-4" : "pt-0"
         )}
       >
         <motion.nav
-          initial={{ width: "100%", borderRadius: "0px", y: 0 }}
-          animate={{
-            width: scrolled ? "90%" : "100%",
-            maxWidth: scrolled ? "1024px" : "100%",
-            borderRadius: scrolled ? "9999px" : "0px",
-            y: 0
-          }}
-          transition={{ duration: 0.3, ease: "easeInOut" }}
+          initial={{ y: -100 }}
+          animate={{ y: 0 }}
           className={cn(
-            "flex items-center justify-between px-6 py-4 md:px-10 transition-all duration-300",
+            "flex items-center justify-between px-6 py-4 md:px-8 transition-all duration-500",
             scrolled
-              ? "bg-white/80 backdrop-blur-xl border border-white/40 shadow-lg shadow-black/5"
-              : "bg-transparent border-b border-transparent"
+              ? "w-[90%] max-w-5xl bg-white/80 backdrop-blur-xl border border-white/40 shadow-xl shadow-slate-900/5 rounded-full"
+              : "w-full bg-transparent"
           )}
         >
           <div className="flex items-center gap-2">
-            <div className={cn("p-2 rounded-xl transition-all duration-300", scrolled ? "bg-indigo-50" : "bg-white/40 backdrop-blur-sm")}>
-              <Compass className="w-5 h-5 text-indigo-600" />
+            <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center rotate-3 transition-all", scrolled ? "bg-indigo-600" : "bg-white/20 backdrop-blur-md")}>
+              <Compass className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl font-bold tracking-tight text-slate-800">
-              Trip<span className="text-indigo-600">Gena</span>
-            </span>
+            <span className={cn("text-lg font-black tracking-tight transition-colors", scrolled ? "text-slate-900" : "text-white drop-shadow-md")}>TripGena.</span>
           </div>
 
-          <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
-            {["Features", "Live Demo", "How it Works"].map((item) => (
-              <Link key={item} href={`#${item.toLowerCase().replace(" ", "-")}`} className="hover:text-indigo-600 transition-colors">
-                {item}
-              </Link>
+          <div className={cn("hidden md:flex items-center gap-8 text-sm font-bold transition-colors", scrolled ? "text-slate-500" : "text-white/90 drop-shadow-sm")}>
+            {["Trips", "Community", "About"].map(item => (
+              <Link key={item} href="#" className="hover:text-indigo-400 transition-colors">{item}</Link>
             ))}
           </div>
 
           <div className="flex items-center gap-4">
-            <Link href="/login" className="text-sm font-medium text-slate-600 hover:text-indigo-600 hidden sm:block">
-              Log in
+            <Link href="/login" className={cn("text-sm font-bold hidden sm:block transition-colors hover:text-indigo-400", scrolled ? "text-slate-900" : "text-white drop-shadow-sm")}>Log in</Link>
+            <Link href="/register">
+              <Button className={cn("rounded-full px-6 font-bold transition-all hover:scale-105 shadow-lg", scrolled ? "bg-slate-900 hover:bg-indigo-600 text-white" : "bg-white text-slate-900 hover:bg-indigo-50")}>
+                Get Started
+              </Button>
             </Link>
-            <Button className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-full px-6 shadow-lg shadow-indigo-600/20">
-              Start Planning
-            </Button>
           </div>
         </motion.nav>
       </motion.header>
 
       {/* --- Hero Section --- */}
-      <section className="relative min-h-[110vh] flex flex-col justify-center items-center overflow-hidden pt-32 pb-20">
+      <section className="relative min-h-[100vh] flex flex-col items-center justify-center pt-20 pb-20 overflow-hidden">
 
-        {/* Animated Background Elements */}
-        <div className="absolute inset-0 select-none overflow-hidden pointer-events-none">
-          {/* Blobs */}
-          <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-purple-200/40 rounded-full blur-[120px] mix-blend-multiply animate-blob" />
-          <div className="absolute top-[10%] right-[-10%] w-[40vw] h-[40vw] bg-blue-200/40 rounded-full blur-[120px] mix-blend-multiply animate-blob animation-delay-2000" />
-          <div className="absolute bottom-[-10%] left-[20%] w-[40vw] h-[40vw] bg-pink-200/40 rounded-full blur-[120px] mix-blend-multiply animate-blob animation-delay-4000" />
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:40px_40px]" />
+        {/* Dynamic Background Slider */}
+        <div className="absolute inset-0 z-0">
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-900/40 via-slate-900/20 to-slate-900/90 z-20" />
+          <div className="absolute inset-0 bg-black/20 z-10" /> {/* Extra tint for text readability */}
 
-          {/* 3D Globe Wireframe (SVG) */}
-          <div className="absolute inset-0 flex items-center justify-center opacity-30 select-none">
-            <svg viewBox="0 0 800 800" className="w-[120vw] h-[120vw] md:w-[60vw] md:h-[60vw] animate-spin-slow text-indigo-300 fill-none stroke-current stroke-[0.5]">
-              <circle cx="400" cy="400" r="300" />
-              <ellipse cx="400" cy="400" rx="300" ry="100" />
-              <ellipse cx="400" cy="400" rx="300" ry="200" transform="rotate(45 400 400)" />
-              <ellipse cx="400" cy="400" rx="300" ry="200" transform="rotate(-45 400 400)" />
-              <path d="M400 100 V 700" />
-              <path d="M100 400 H 700" />
-              <path d="M400 100 Q 600 200 600 400 Q 600 600 400 700" />
-              <path d="M400 100 Q 200 200 200 400 Q 200 600 400 700" />
-            </svg>
-          </div>
+          <AnimatePresence mode="popLayout">
+            <motion.div
+              key={currentImageIndex}
+              initial={{ opacity: 0, scale: 1.1 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1.5, ease: "easeInOut" }}
+              className="absolute inset-0 w-full h-full"
+            >
+              <motion.div
+                initial={{ scale: 1 }}
+                animate={{ scale: 1.1 }} // Subtle Ken Burns zoom
+                transition={{ duration: 8, ease: "linear" }}
+                className="w-full h-full bg-cover bg-center"
+                style={{ backgroundImage: `url('${heroImages[currentImageIndex]}')` }}
+              />
+            </motion.div>
+          </AnimatePresence>
         </div>
 
-        <div className="container relative z-10 px-4 mx-auto text-center perspective-[1000px]">
+        <div className="container relative z-10 px-4 text-center">
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/50 backdrop-blur-sm border border-white/60 text-slate-600 text-sm font-medium mb-8 shadow-sm hover:scale-105 transition-transform cursor-pointer"
+            transition={{ delay: 0.2 }}
+            className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 px-4 py-1.5 rounded-full text-sm font-bold text-white mb-8 shadow-2xl"
           >
-            <span className="flex h-2 w-2 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
-            </span>
-            AI-Powered Travel OS
+            <Sparkles className="w-4 h-4 text-indigo-300" />
+            <span>The AI Travel OS for Students</span>
           </motion.div>
 
-          {/* Staggered Typography */}
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight text-slate-900 mb-8 leading-[1.1] flex flex-wrap justify-center gap-x-4">
-            <div className="flex flex-wrap justify-center gap-x-4">
-              {["Values", "Memories,"].map((word, i) => (
-                <motion.span
-                  key={i}
-                  initial={{ opacity: 0, y: 20, filter: "blur(10px)" }}
-                  animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                  transition={{ delay: i * 0.15, duration: 0.8 }}
-                >
-                  {word}
-                </motion.span>
-              ))}
-            </div>
-            <div className="relative inline-block w-full text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500">
-              <motion.span
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.4, duration: 0.8 }}
-                className="inline-block"
-              >
-                Not Just Destinations.
-              </motion.span>
-              <motion.svg
-                initial={{ pathLength: 0 }}
-                animate={{ pathLength: 1 }}
-                transition={{ duration: 1.5, delay: 0.8, ease: "easeInOut" }}
-                className="absolute w-full h-3 -bottom-1 left-0 text-indigo-400 opacity-60"
-                viewBox="0 0 200 9"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path d="M2.00025 7.00001C45.2952 0.702738 126.331 -2.7121 198.001 3.50002" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-              </motion.svg>
-            </div>
+          <h1 className="text-6xl md:text-8xl lg:text-9xl font-black text-white tracking-tight leading-[0.9] mb-8 drop-shadow-2xl">
+            Plan trips <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-200 via-indigo-200 to-pink-200 drop-shadow-md">
+              not debts.
+            </span>
           </h1>
 
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1, duration: 1 }}
-            className="max-w-2xl mx-auto text-xl text-slate-600 mb-10 leading-relaxed"
-          >
-            The first travel OS that understands your <span className="font-semibold text-slate-800">budget constraints</span>, <span className="font-semibold text-slate-800">busy schedule</span>, and <span className="font-semibold text-slate-800">wanderlust</span>.
-          </motion.p>
+          <p className="text-xl md:text-2xl text-slate-100 max-w-2xl mx-auto mb-10 leading-relaxed font-medium drop-shadow-lg text-shadow-sm">
+            Generate complete itineraries based on your <span className="text-white font-bold decoration-indigo-400 underline decoration-4 underline-offset-4">exact budget</span>.
+            Split costs, find hidden gems, and travel like a pro.
+          </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button size="lg" className="h-14 px-8 text-lg rounded-full bg-indigo-600 hover:bg-indigo-700 shadow-xl shadow-indigo-600/20 group transition-all hover:scale-105">
-              Start Planning Free
-              <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </Button>
-            <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-full bg-white/60 hover:bg-white border-white/60 backdrop-blur-sm transition-all hover:scale-105">
-              <MapPin className="mr-2 w-5 h-5 text-indigo-500" />
-              Explore Demo
+            <Link href="/dashboard/create">
+              <Button size="xl" className="h-16 px-10 rounded-full bg-slate-900 text-white text-lg font-bold shadow-2xl shadow-indigo-900/30 hover:scale-105 hover:bg-indigo-600 transition-all">
+                Start Planning Free <ArrowRight className="ml-2 w-5 h-5" />
+              </Button>
+            </Link>
+            <Button variant="outline" size="xl" className="h-16 px-10 rounded-full bg-white/50 border-white/60 text-slate-900 text-lg font-bold backdrop-blur-sm hover:bg-white transition-all">
+              View Live Demo
             </Button>
           </div>
+
         </div>
 
-        {/* Floating Cards - 3 Elements for Balance */}
-        <motion.div
-          initial={{ opacity: 0, x: -100 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 1.2, duration: 1 }}
-          className="absolute left-[5%] top-[60%] md:top-[40%] hidden xl:block"
-        >
-          <div className="bg-white/80 backdrop-blur-xl p-4 rounded-2xl shadow-xl border border-white/60 rotate-[-6deg] hover:rotate-0 transition-transform duration-300 hover:shadow-2xl">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-xl">
-                <Utensils className="w-5 h-5 text-orange-600" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-slate-400 uppercase">Budget</p>
-                <p className="font-bold text-slate-800">Under ₹5k</p>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, x: 100 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 1.4, duration: 1 }}
-          className="absolute right-[5%] top-[65%] md:top-[50%] hidden xl:block"
-        >
-          <div className="bg-white/80 backdrop-blur-xl p-4 rounded-2xl shadow-xl border border-white/60 rotate-[6deg] hover:rotate-0 transition-transform duration-300 hover:shadow-2xl">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-xl">
-                <Waves className="w-5 h-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-slate-400 uppercase">Vibe</p>
-                <p className="font-bold text-slate-800">Adventure</p>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-
+        {/* Floating Decoration Cards */}
+        <div className="hidden lg:block absolute inset-0 pointer-events-none max-w-[1400px] mx-auto">
+          <FloatingCard
+            icon={Wallet}
+            title="Total Cost"
+            subtitle="₹4,500 / person"
+            className="top-[25%] left-[5%] -rotate-6"
+            delay={1}
+          />
+          <FloatingCard
+            icon={MapPin}
+            title="Location"
+            subtitle="Gokarna, India"
+            className="top-[35%] right-[5%] rotate-6"
+            delay={1.2}
+          />
+          <FloatingCard
+            icon={Calendar}
+            title="Duration"
+            subtitle="3 Days, 2 Nights"
+            className="bottom-[20%] left-[15%] rotate-3"
+            delay={1.4}
+          />
+        </div>
 
       </section>
 
-      {/* --- Social Proof: Infinite Marquee --- */}
-      <section className="py-12 border-y border-slate-200 bg-white/50 backdrop-blur-sm overflow-hidden">
-        <div className="container mx-auto px-4 mb-6 text-center">
-          <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Trusted by explorers everywhere</p>
-        </div>
-        <div className="relative flex overflow-x-hidden group">
-          <div className="animate-scroll whitespace-nowrap flex gap-12 sm:gap-20 items-center">
-            {[...Array(2)].map((_, i) => (
-              <div key={i} className="flex gap-12 sm:gap-20 items-center opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
-                {["Backpackers", "Couples", "Solo Travelers", "Digital Nomads", "Foodies", "Weekend Warriors", "Adventure Seekers", "Luxury Lovers"].map((item) => (
-                  <span key={item} className="text-xl md:text-2xl font-bold text-slate-800 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-slate-300" /> {item}
-                  </span>
-                ))}
-              </div>
-            ))}
-          </div>
-          <div className="pointer-events-none absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-[#F2F6FF] to-transparent" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-[#F2F6FF] to-transparent" />
-        </div>
-      </section>
-
-      {/* --- Restyled Live Demo Section (Preserved) --- */}
-      <section id="live-demo" className="py-24 relative">
+      {/* --- Trending Section --- */}
+      <section className="py-32 relative bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-50/50 via-white to-white">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16 max-w-3xl mx-auto">
-            <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-6">
-              Just Ask. <span className="text-indigo-600">We Calculate Everything.</span>
-            </h2>
-            <p className="text-lg text-slate-600">
-              Type your dream trip in plain English. Our AI handles the logistics like a pro travel agent.
-            </p>
+          <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
+            <div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-bold uppercase tracking-wider mb-4"
+              >
+                <Sparkles className="w-3 h-3" /> Popular Right Now
+              </motion.div>
+              <motion.h2
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.1 }}
+                className="text-4xl md:text-6xl font-black text-slate-900 mb-4 tracking-tight"
+              >
+                Trending this Season <span className="text-orange-500">🔥</span>
+              </motion.h2>
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.2 }}
+                className="text-slate-500 text-lg font-medium max-w-lg"
+              >
+                The most booked destinations by students in the last 30 days. High on vibe, low on budget.
+              </motion.p>
+            </div>
+            <Button variant="ghost" className="text-indigo-600 text-lg font-bold hover:bg-indigo-50 hover:gap-2 transition-all">
+              View all Destinations <ArrowRight className="w-5 h-5 ml-1" />
+            </Button>
           </div>
 
-          <div className="max-w-5xl mx-auto">
-            {/* Window Container */}
-            <motion.div
-              initial={{ y: 40, opacity: 0 }}
-              whileInView={{ y: 0, opacity: 1 }}
-              viewport={{ once: true, margin: "-100px" }}
-              className="rounded-3xl overflow-hidden shadow-2xl bg-white border border-slate-200"
-            >
-              {/* Window Header */}
-              <div className="bg-slate-50 border-b border-slate-200 px-6 py-4 flex items-center justify-between">
-                <div className="flex gap-2">
-                  <div className="w-3 h-3 rounded-full bg-red-400" />
-                  <div className="w-3 h-3 rounded-full bg-amber-400" />
-                  <div className="w-3 h-3 rounded-full bg-green-400" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <DestinationCard
+              delay={0.1}
+              name="Manali"
+              price="₹6,500"
+              vibe="Snow & Chill"
+              img="https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&w=800"
+            />
+            <DestinationCard
+              delay={0.2}
+              name="Goa"
+              price="₹5,200"
+              vibe="Beaches & Party"
+              img="https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&w=800"
+            />
+            <DestinationCard
+              delay={0.3}
+              name="Varkala"
+              price="₹4,800"
+              vibe="Cliffs & Cafes"
+              img="https://images.unsplash.com/photo-1587595431973-160d0d94add1?auto=format&fit=crop&w=800"
+            />
+            <DestinationCard
+              delay={0.4}
+              name="Rishikesh"
+              price="₹3,500"
+              vibe="Rafting & Peace"
+              img="https://images.unsplash.com/photo-1588416936097-41850ab3d86d?auto=format&fit=crop&w=800"
+            />
+          </div>
+        </div>
+      </section>
+
+
+      {/* --- Bento Grid Features (Dark Mode) --- */}
+      <section className="py-32 bg-slate-950 text-white relative overflow-hidden">
+        {/* Ambient Glow */}
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+          <div className="absolute top-[-20%] right-[-10%] w-[800px] h-[800px] bg-indigo-900/40 rounded-full blur-[120px]" />
+          <div className="absolute bottom-[-20%] left-[-10%] w-[600px] h-[600px] bg-purple-900/40 rounded-full blur-[120px]" />
+        </div>
+
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="text-center max-w-3xl mx-auto mb-20">
+            <h2 className="text-4xl md:text-6xl font-black mb-6 tracking-tight">Everything you need to <br /> <span className="text-indigo-400">escape campus.</span></h2>
+            <p className="text-xl text-slate-400">We handle the boring stuff (math, maps, routes) so you can focus on making memories (and reels).</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 md:grid-rows-2 gap-6 h-auto md:h-[700px]">
+
+            {/* Feature 1: AI Planner (Large) */}
+            <motion.div whileHover={{ scale: 1.01 }} className="md:col-span-2 md:row-span-2 bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-10 relative overflow-hidden flex flex-col justify-between group hover:border-indigo-500/50 transition-colors duration-500">
+              <div className="relative z-10">
+                <div className="w-14 h-14 rounded-2xl bg-indigo-600 flex items-center justify-center mb-6 shadow-lg shadow-indigo-500/30">
+                  <Sparkles className="w-7 h-7 text-white" />
                 </div>
-                <div className="px-3 py-1 rounded-md bg-slate-200/50 text-xs font-medium text-slate-500 flex items-center gap-2">
-                  <Sparkles className="w-3 h-3" /> TripGena Planner 1.0
-                </div>
-                <div className="w-10" /> {/* Spacer */}
+                <h3 className="text-3xl font-bold text-white mb-4">AI Itinerary Builder</h3>
+                <p className="text-slate-400 text-lg max-w-sm leading-relaxed">Tell us "Goa under 5k" and get a full day-by-day plan tailored to your vibe. No generic "tourist trap" suggestions.</p>
               </div>
 
-              {/* Window Body */}
-              <div className="flex flex-col md:flex-row h-[500px] md:h-[600px]">
-
-                {/* Left Panel: Chat */}
-                <div className="w-full md:w-5/12 bg-slate-50 p-6 flex flex-col border-r border-slate-200">
-                  <div className="flex-1 space-y-4 overflow-y-auto mb-4 scrollbar-hide">
-                    {/* Bot Welcome */}
-                    <div className="flex gap-3">
-                      <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
-                        <Sparkles className="w-4 h-4 text-indigo-600" />
-                      </div>
-                      <div className="bg-white border-slate-200 border p-3 rounded-2xl rounded-tl-none shadow-sm text-sm text-slate-700">
-                        Hey there! Where are we going today?
-                      </div>
+              {/* Interactive Visual Mock */}
+              <div className="absolute right-0 bottom-0 w-3/4 h-2/3 bg-slate-950 rounded-tl-[2.5rem] border-t border-l border-white/10 p-6 transition-transform group-hover:scale-105 group-hover:-translate-x-2 group-hover:-translate-y-2 origin-bottom-right shadow-2xl">
+                <div className="space-y-4 opacity-80 group-hover:opacity-100 transition-opacity">
+                  <div className="flex gap-4 items-center p-4 bg-slate-900 rounded-2xl border border-white/5">
+                    <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center text-green-400 font-bold">1</div>
+                    <div>
+                      <div className="h-2 w-24 bg-slate-700 rounded-full mb-2" />
+                      <div className="h-2 w-32 bg-slate-800 rounded-full" />
                     </div>
-
-                    {/* User Prompt */}
-                    <div className="flex gap-3 justify-end">
-                      <div className="bg-indigo-600 text-white p-3 rounded-2xl rounded-tr-none shadow-md text-sm max-w-[85%]">
-                        {displayText}
-                        {isTyping && <span className="animate-pulse">|</span>}
-                      </div>
-                      <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center flex-shrink-0">
-                        <User className="w-4 h-4 text-slate-500" />
-                      </div>
-                    </div>
-
-                    {/* Bot Response (Conditional) */}
-                    {!isTyping && (
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="flex gap-3"
-                      >
-                        <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
-                          <Sparkles className="w-4 h-4 text-indigo-600" />
-                        </div>
-                        <div className="bg-white border-slate-200 border p-4 rounded-2xl rounded-tl-none shadow-sm text-sm text-slate-700 w-full">
-                          <p className="mb-2 flex items-center gap-2">Found it! <Palmtree className="w-4 h-4 text-emerald-600" /> Goa trip under ₹6k.</p>
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between text-xs border-b border-slate-100 pb-2">
-                              <span className="text-slate-500">Duration</span>
-                              <span className="font-medium text-slate-800">3 Days</span>
-                            </div>
-                            <div className="flex items-center justify-between text-xs border-b border-slate-100 pb-2">
-                              <span className="text-slate-500">Budget</span>
-                              <span className="font-medium text-green-600">₹5,800 / person</span>
-                            </div>
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
                   </div>
-
-                  {/* Input Simulation */}
-                  <div className="relative">
-                    <input
-                      disabled
-                      placeholder={isTyping ? "Typing..." : "Ask follow up..."}
-                      className="w-full bg-white border border-slate-200 rounded-full pl-4 pr-10 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 shadow-sm"
-                    />
-                    <div className="absolute right-2 top-2 p-1.5 bg-indigo-600 rounded-full text-white">
-                      <ArrowRight className="w-3 h-3" />
+                  <div className="flex gap-4 items-center p-4 bg-slate-900 rounded-2xl border border-white/5">
+                    <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 font-bold">2</div>
+                    <div>
+                      <div className="h-2 w-28 bg-slate-700 rounded-full mb-2" />
+                      <div className="h-2 w-20 bg-slate-800 rounded-full" />
                     </div>
                   </div>
                 </div>
-
-                {/* Right Panel: Visual Results */}
-                <div className="w-full md:w-7/12 bg-white relative overflow-hidden">
-                  {!isTyping ? (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.2 }}
-                      className="h-full flex flex-col"
-                    >
-                      {/* Map / Itinerary Visualization */}
-                      <div className="h-1/2 bg-slate-100 relative group overflow-hidden">
-                        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?q=80&w=2835&auto=format&fit=crop')] bg-cover bg-center opacity-90 group-hover:scale-105 transition-transform duration-700" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-6">
-                          <h3 className="text-white font-bold text-2xl">Goa, India</h3>
-                        </div>
-                        <div className="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-indigo-600 shadow-lg">
-                          Match: 98%
-                        </div>
-                      </div>
-
-                      <div className="h-1/2 p-6 overflow-y-auto bg-slate-50/50">
-                        <h4 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
-                          <Calendar className="w-4 h-4 text-indigo-600" /> Itinerary Highlights
-                        </h4>
-
-                        <div className="space-y-3">
-                          {/* Item 1 */}
-                          <div className="relative pl-6 border-l-2 border-indigo-200 pb-4 last:pb-0">
-                            <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full border-2 border-indigo-200 bg-white flex items-center justify-center">
-                              <div className="w-1.5 h-1.5 rounded-full bg-indigo-600" />
-                            </div>
-                            <p className="text-xs font-bold text-slate-400 mb-1">DAY 1 • MORNING</p>
-                            <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex gap-3">
-                              <div className="w-12 h-12 bg-indigo-50 rounded-md flex items-center justify-center text-xl">
-                                <Hotel className="w-6 h-6 text-indigo-600" />
-                              </div>
-                              <div>
-                                <p className="font-semibold text-sm text-slate-800">Check-in at Zostel Goa</p>
-                                <p className="text-xs text-slate-500">₹800/night • Near Calangute</p>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Item 2 */}
-                          <div className="relative pl-6 border-l-2 border-indigo-200">
-                            <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full border-2 border-indigo-200 bg-white flex items-center justify-center">
-                              <div className="w-1.5 h-1.5 rounded-full bg-indigo-600" />
-                            </div>
-                            <p className="text-xs font-bold text-slate-400 mb-1">DAY 1 • EVENING</p>
-                            <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex gap-3">
-                              <div className="w-12 h-12 bg-orange-50 rounded-md flex items-center justify-center text-xl">
-                                <Utensils className="w-6 h-6 text-orange-600" />
-                              </div>
-                              <div>
-                                <p className="font-semibold text-sm text-slate-800">Dinner at Fisherman's Wharf</p>
-                                <p className="text-xs text-slate-500">Avg ₹400/person • Live Music</p>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ) : (
-                    <div className="h-full w-full flex flex-col items-center justify-center bg-slate-50 text-slate-400">
-                      <div className="w-16 h-16 border-4 border-slate-200 border-t-indigo-500 rounded-full animate-spin mb-4" />
-                      <p className="text-sm font-medium">Analyzing budget & preferences...</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* --- Features Bento Grid --- */}
-      <section id="features" className="py-24 bg-slate-50">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-bold text-slate-900 mb-6">Built for the Modern Explorer.</h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">No more spreadsheets. No more "too expensive" cancellations.</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {/* Feature 1: Large */}
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              className="md:col-span-2 bg-indigo-600 rounded-3xl p-8 md:p-12 relative overflow-hidden text-white shadow-xl shadow-indigo-200"
-            >
-              <div className="relative z-10 max-w-sm">
-                <div className="bg-white/20 backdrop-blur w-12 h-12 rounded-2xl flex items-center justify-center mb-6">
-                  <Wallet className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="text-3xl font-bold mb-4">Budget-First Engine</h3>
-                <p className="text-indigo-100 leading-relaxed text-lg">Set your total cap (e.g., ₹5000), and we reverse-engineer the perfect trip. We prioritize value over luxury without sacrificing fun.</p>
-              </div>
-              {/* Abstract shape */}
-              <div className="absolute right-0 bottom-0 opacity-20 translate-x-1/4 translate-y-1/4">
-                <div className="w-64 h-64 rounded-full border-[20px] border-white/30" />
-                <div className="w-48 h-48 rounded-full border-[20px] border-white/30 absolute inset-0 m-auto" />
               </div>
             </motion.div>
 
-            {/* Feature 2: Tall */}
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              className="bg-white rounded-3xl p-8 border border-slate-100 shadow-lg relative overflow-hidden"
-            >
-              <div className="bg-orange-100 w-12 h-12 rounded-2xl flex items-center justify-center mb-6">
-                <CheckCircle2 className="w-6 h-6 text-orange-600" />
+            {/* Feature 2: Budget */}
+            <motion.div whileHover={{ scale: 1.02 }} className="bg-gradient-to-br from-green-900/20 to-slate-900/50 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-8 relative overflow-hidden group hover:border-green-500/50 transition-colors">
+              <div className="w-12 h-12 rounded-2xl bg-green-500/20 flex items-center justify-center mb-6 text-green-400">
+                <Wallet className="w-6 h-6" />
               </div>
-              <h3 className="text-2xl font-bold text-slate-900 mb-3">Real-time Adapting</h3>
-              <p className="text-slate-500 mb-8">Train delayed? Rain started? One tap recalculates everything instantly.</p>
-              {/* Visual decor */}
-              <div className="absolute bottom-0 left-0 right-0 bg-slate-50/50 h-32 border-t border-slate-100 flex flex-col p-4 gap-2">
-                <div className="flex items-center justify-between text-xs text-slate-400">
-                  <span>Old Plan</span>
-                  <span className="line-through">Beach Day</span>
-                </div>
-                <div className="flex items-center justify-between text-sm font-semibold text-orange-600 bg-orange-50 p-2 rounded-lg">
-                  <span>New Plan</span>
-                  <span className="flex items-center gap-1">Cafe Hop <Coffee className="w-3 h-3" /></span>
-                </div>
-              </div>
+              <h3 className="text-2xl font-bold text-white mb-2">Smart Budgeting</h3>
+              <p className="text-slate-400">Track every chai and bus ticket. Split bills instantly.</p>
+              <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-green-500/20 blur-[50px] rounded-full group-hover:bg-green-500/30 transition-colors" />
             </motion.div>
 
-            {/* Feature 3: Standard */}
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              className="bg-white rounded-3xl p-8 border border-slate-100 shadow-lg"
-            >
-              <div className="bg-cyan-100 w-12 h-12 rounded-2xl flex items-center justify-center mb-6">
-                <Map className="w-6 h-6 text-cyan-600" />
+            {/* Feature 3: Map */}
+            <motion.div whileHover={{ scale: 1.02 }} className="bg-gradient-to-br from-blue-900/20 to-slate-900/50 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-8 relative overflow-hidden group hover:border-blue-500/50 transition-colors">
+              <div className="w-12 h-12 rounded-2xl bg-blue-500/20 flex items-center justify-center mb-6 text-blue-400">
+                <Map className="w-6 h-6" />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-2">Visual Mapping</h3>
-              <p className="text-slate-500">See your friends' live locations and plan routes visually.</p>
+              <h3 className="text-2xl font-bold text-white mb-2">Live Maps</h3>
+              <p className="text-slate-400">Visualize your route and find places nearby.</p>
+              <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-blue-500/20 blur-[50px] rounded-full group-hover:bg-blue-500/30 transition-colors" />
             </motion.div>
 
-            {/* Feature 4: Standard, Dark */}
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              className="md:col-span-2 bg-slate-900 rounded-3xl p-8 md:p-10 text-white flex flex-col md:flex-row items-center gap-8 shadow-2xl"
-            >
-              <div className="flex-1">
-                <div className="bg-slate-800 w-12 h-12 rounded-2xl flex items-center justify-center mb-6">
-                  <Sparkles className="w-6 h-6 text-yellow-400" />
-                </div>
-                <h3 className="text-2xl font-bold mb-3">Hidden Gems Mode</h3>
-                <p className="text-slate-300">Unlock spots only locals know about. Avoid tourist traps and save money while discovering the authentic vibe.</p>
-              </div>
-              <div className="w-full md:w-1/3 aspect-video bg-slate-800 rounded-xl overflow-hidden relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 opacity-50" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Sparkles className="w-8 h-8 text-white/80" />
-                </div>
-              </div>
-            </motion.div>
           </div>
         </div>
       </section>
@@ -523,130 +369,111 @@ export default function Home() {
       {/* --- Testimonials: Vibe Check --- */}
       <section className="py-24 bg-white overflow-hidden">
         <div className="container mx-auto px-4 mb-16 text-center">
-          <span className="text-indigo-600 font-bold tracking-wider uppercase text-sm bg-indigo-50 px-3 py-1 rounded-full">Community</span>
-          <h2 className="text-3xl md:text-5xl font-bold text-slate-900 mt-4">Vibe Check Passed <CheckCircle2 className="w-8 h-8 text-green-500 inline" /></h2>
+          <Badge className="bg-indigo-100 text-indigo-700 hover:bg-indigo-100 px-4 py-1 text-sm rounded-full mb-6">Community Love</Badge>
+          <h2 className="text-4xl md:text-5xl font-black text-slate-900">Vibe Check Passed ✅</h2>
         </div>
 
-        <div className="relative w-full">
-          <div className="flex animate-scroll gap-6 px-4 w-max hover:pause-scroll">
-            {/* Review Cards (Duplicated for infinite scroll illusion) */}
-            {[...Array(2)].map((_, i) => (
+        <div className="relative w-full overflow-hidden">
+          <div className="flex animate-scroll hover:pause-scroll items-stretch gap-6 w-max">
+            {[...Array(4)].map((_, i) => (
               <div key={i} className="flex gap-6">
-                <div className="w-80 p-6 rounded-2xl bg-[#F8FAFC] border border-slate-100">
-                  <div className="flex items-center gap-1 text-yellow-500 mb-3">
-                    <Star className="w-4 h-4 fill-current" /><Star className="w-4 h-4 fill-current" /><Star className="w-4 h-4 fill-current" /><Star className="w-4 h-4 fill-current" /><Star className="w-4 h-4 fill-current" />
+                <div className="w-96 p-8 rounded-[2rem] bg-slate-50 border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300">
+                  <div className="flex gap-1 mb-4">
+                    {[1, 2, 3, 4, 5].map(s => <Star key={s} className="w-4 h-4 text-yellow-500 fill-current" />)}
                   </div>
-                  <p className="text-slate-700 italic mb-4">"Saved us ₹4000 on our Manali trip just by suggesting better hostel timings. Insane."</p>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-slate-200" />
+                  <p className="text-slate-800 text-lg font-medium italic mb-6">"TripGena saved our Goa plan. We were about to cancel because of budget, but the AI found us a crazy good hostel."</p>
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-400 to-purple-400" />
                     <div>
-                      <p className="text-sm font-bold text-slate-900">Rahul K.</p>
-                      <p className="text-xs text-slate-500">Adventure Enthusiast</p>
+                      <p className="font-bold text-slate-900">Rohan Das</p>
+                      <p className="text-sm text-slate-500">Engineering Student</p>
                     </div>
                   </div>
                 </div>
-
-                <div className="w-80 p-6 rounded-2xl bg-[#F8FAFC] border border-slate-100">
-                  <div className="flex items-center gap-1 text-yellow-500 mb-3">
-                    <Star className="w-4 h-4 fill-current" /><Star className="w-4 h-4 fill-current" /><Star className="w-4 h-4 fill-current" /><Star className="w-4 h-4 fill-current" /><Star className="w-4 h-4 fill-current" />
+                <div className="w-96 p-8 rounded-[2rem] bg-slate-50 border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300">
+                  <div className="flex gap-1 mb-4">
+                    {[1, 2, 3, 4, 5].map(s => <Star key={s} className="w-4 h-4 text-yellow-500 fill-current" />)}
                   </div>
-                  <p className="text-slate-700 italic mb-4">"The itinerary visualizer is a game changer. Finally got my group to agree on a plan!"</p>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-slate-200" />
+                  <p className="text-slate-800 text-lg font-medium italic mb-6">"Hidden Gems mode is legit. Found a cafe in Manali that wasn't on Google Maps. Best Maggie ever."</p>
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-400 to-orange-400" />
                     <div>
-                      <p className="text-sm font-bold text-slate-900">Sneha P.</p>
-                      <p className="text-xs text-slate-500">Solo Traveller</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="w-80 p-6 rounded-2xl bg-[#F8FAFC] border border-slate-100">
-                  <div className="flex items-center gap-1 text-yellow-500 mb-3">
-                    <Star className="w-4 h-4 fill-current" /><Star className="w-4 h-4 fill-current" /><Star className="w-4 h-4 fill-current" /><Star className="w-4 h-4 fill-current" /><Star className="w-4 h-4 fill-current" />
-                  </div>
-                  <p className="text-slate-700 italic mb-4">"Hidden Gems mode found a cafe in Gokarna that wasn't on Google Maps. Best food ever."</p>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-slate-200" />
-                    <div>
-                      <p className="text-sm font-bold text-slate-900">Arjun M.</p>
-                      <p className="text-xs text-slate-500">Digital Nomad</p>
+                      <p className="font-bold text-slate-900">Sara Khan</p>
+                      <p className="text-sm text-slate-500">Solo Traveller</p>
                     </div>
                   </div>
                 </div>
               </div>
             ))}
           </div>
-          <div className="pointer-events-none absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-white to-transparent" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-white to-transparent" />
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-white to-transparent z-10" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-white to-transparent z-10" />
         </div>
       </section>
 
       {/* --- Mega CTA --- */}
-      <section className="py-20 px-4">
+      <section className="py-24 px-4 bg-slate-50">
         <div className="container mx-auto">
-          <div className="rounded-[3rem] bg-slate-900 relative overflow-hidden px-6 py-20 md:py-32 text-center">
-            {/* Background Blobs */}
-            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-              <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-indigo-600/30 rounded-full blur-[100px] animate-pulse" />
-              <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] bg-purple-600/30 rounded-full blur-[100px] animate-pulse delay-700" />
+          <div className="bg-black rounded-[3rem] p-12 md:p-24 text-center relative overflow-hidden group">
+            {/* Animated Background */}
+            <div className="absolute inset-0 opacity-40">
+              <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,_rgba(79,70,229,0.4),transparent_70%)] group-hover:scale-110 transition-transform duration-1000" />
             </div>
 
             <div className="relative z-10 max-w-3xl mx-auto space-y-8">
-              <h2 className="text-4xl md:text-7xl font-black text-white tracking-tight leading-tight">
+              <h2 className="text-5xl md:text-8xl font-black text-white tracking-tighter leading-[0.9]">
                 Stop Dreaming. <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">Start Packing.</span>
+                <span className="text-indigo-500">Start Packing.</span>
               </h2>
-              <p className="text-slate-400 text-xl max-w-xl mx-auto">
-                Join 10,000+ travellers planning their next escape with TripGena. No credit card required.
+              <p className="text-slate-400 text-xl md:text-2xl font-medium max-w-xl mx-auto">
+                Join 10,000+ students planning their next escape. <br /> No credit card required.
               </p>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-                <Button size="xl" className="h-16 px-10 text-xl rounded-full bg-white text-slate-900 hover:bg-slate-100 hover:scale-105 transition-all shadow-xl shadow-white/10 font-bold">
-                  Get Started for Free
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8">
+                <Button size="xl" className="h-16 px-12 text-lg rounded-full bg-white text-black hover:bg-indigo-50 hover:scale-105 transition-all shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] font-black">
+                  Get Started for Free <Zap className="w-5 h-5 ml-2 fill-black" />
                 </Button>
               </div>
-              <p className="text-slate-500 text-sm mt-4">Available on Web, iOS & Android</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* --- Footer (Updated) --- */}
-      <footer className="py-12 border-t border-slate-200 bg-slate-50 text-slate-500">
-        <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Compass className="w-6 h-6 text-indigo-600" />
-              <span className="text-xl font-bold text-slate-800">TripGena</span>
+      {/* --- Footer --- */}
+      <footer className="py-20 bg-slate-900 border-t border-slate-800 text-slate-400">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row justify-between items-start gap-12 mb-16">
+            <div className="max-w-xs">
+              <div className="flex items-center gap-2 font-bold text-white text-2xl mb-6">
+                <Compass className="w-8 h-8 text-indigo-500" /> TripGena
+              </div>
+              <p className="leading-relaxed">The intelligent travel OS designed for the student wallet. Plan, track, and explore without the stress.</p>
             </div>
-            <p className="text-sm">The intelligent travel OS.</p>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-12 text-sm font-medium">
+              <div className="space-y-4">
+                <h4 className="text-white font-bold mb-4">Product</h4>
+                <a href="#" className="block hover:text-indigo-400 transition-colors">Features</a>
+                <a href="#" className="block hover:text-indigo-400 transition-colors">Pricing</a>
+                <a href="#" className="block hover:text-indigo-400 transition-colors">Live Demo</a>
+              </div>
+              <div className="space-y-4">
+                <h4 className="text-white font-bold mb-4">Company</h4>
+                <a href="#" className="block hover:text-indigo-400 transition-colors">About Us</a>
+                <a href="#" className="block hover:text-indigo-400 transition-colors">Careers</a>
+                <a href="#" className="block hover:text-indigo-400 transition-colors">Blog</a>
+              </div>
+              <div className="space-y-4">
+                <h4 className="text-white font-bold mb-4">Legal</h4>
+                <a href="#" className="block hover:text-indigo-400 transition-colors">Privacy</a>
+                <a href="#" className="block hover:text-indigo-400 transition-colors">Terms</a>
+              </div>
+            </div>
           </div>
-          <div>
-            <h4 className="font-bold text-slate-800 mb-4">Product</h4>
-            <ul className="space-y-2 text-sm">
-              <li><a href="#" className="hover:text-indigo-600">Features</a></li>
-              <li><a href="#" className="hover:text-indigo-600">Pricing</a></li>
-            </ul>
+          <div className="pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-semibold tracking-wider uppercase">
+            <p>© 2026 TripGena Inc.</p>
+            <p>Made with 💜 in India</p>
           </div>
-          <div>
-            <h4 className="font-bold text-slate-800 mb-4">Company</h4>
-            <ul className="space-y-2 text-sm">
-              <li><a href="#" className="hover:text-indigo-600">About</a></li>
-              <li><a href="#" className="hover:text-indigo-600">Careers</a></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-bold text-slate-800 mb-4">Legal</h4>
-            <ul className="space-y-2 text-sm">
-              <li><a href="#" className="hover:text-indigo-600">Privacy</a></li>
-              <li><a href="#" className="hover:text-indigo-600">Terms</a></li>
-            </ul>
-          </div>
-        </div>
-        <div className="container mx-auto px-4 text-center text-sm">
-          © 2026 TripGena Inc.
         </div>
       </footer>
-
     </main>
   )
 }

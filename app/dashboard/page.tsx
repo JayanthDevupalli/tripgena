@@ -1,215 +1,190 @@
 "use client"
 
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { useUserProfile } from "@/hooks/useUserProfile"
-import { motion } from "framer-motion"
+import { useUserTrips } from "@/hooks/useUserTrips"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { motion } from "framer-motion"
 import {
-    Plus,
     Wallet,
     Map as MapIcon,
     Compass,
-    MoreHorizontal,
-    Calendar,
-    Clock,
-    ArrowUpRight,
-    MapPin,
-    CreditCard,
-    Search
+    ArrowRight,
+    Loader2,
+    Sparkles,
+    Search,
+    Flame
 } from "lucide-react"
 
 export default function DashboardPage() {
-    const { profile, loading } = useUserProfile()
+    const { profile, loading: profileLoading } = useUserProfile()
+    const { trips, loading: tripsLoading } = useUserTrips()
+    const router = useRouter()
+    const [quickPrompt, setQuickPrompt] = useState("")
 
-    if (loading) return null // faster perceived load
+    if (profileLoading || tripsLoading) {
+        return (
+            <div className="flex items-center justify-center h-[60vh]">
+                <Loader2 className="w-10 h-10 text-indigo-500 animate-spin" />
+            </div>
+        )
+    }
 
-    const budgetLabel = profile?.preferences?.budget
-        ? profile.preferences.budget > 25000 ? "Luxury"
-            : profile.preferences.budget > 10000 ? "Comfort"
-                : "Budget"
-        : "Standard"
+    const handleQuickStart = () => {
+        if (!quickPrompt.trim()) return
+        localStorage.setItem("trip_starter_prompt", quickPrompt)
+        router.push("/dashboard/create")
+    }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-12">
 
-            {/* --- Top Bar Stats (High Density) --- */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-[0_2px_10px_-4px_rgba(6,81,237,0.1)]">
-                    <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Trips</span>
-                        <MapIcon className="w-4 h-4 text-slate-400" />
-                    </div>
-                    <div className="text-2xl font-bold text-slate-900">0</div>
-                    <div className="text-xs text-slate-400 mt-1 font-medium">+0% this month</div>
-                </div>
+            {/* --- 1. Cinematic Hero Section --- */}
+            <div className="relative rounded-[2.5rem] overflow-hidden min-h-[400px] flex items-center shadow-2xl shadow-indigo-500/20 group">
+                {/* Background Image with Parallax-ish feel */}
+                <div
+                    className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center transition-transform duration-1000 group-hover:scale-105"
+                />
+                {/* Gradient Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-r from-slate-900/90 via-slate-900/40 to-transparent" />
 
-                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-[0_2px_10px_-4px_rgba(6,81,237,0.1)]">
-                    <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Budget Limit</span>
-                        <Wallet className="w-4 h-4 text-slate-400" />
-                    </div>
-                    <div className="text-2xl font-bold text-slate-900">₹{profile?.preferences?.budget?.toLocaleString()}</div>
-                    <div className="text-xs text-emerald-600 mt-1 font-bold flex items-center gap-1">
-                        <span className="bg-emerald-50 px-1.5 py-0.5 rounded text-[10px] uppercase">Strict</span>
-                    </div>
-                </div>
-
-                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-[0_2px_10px_-4px_rgba(6,81,237,0.1)]">
-                    <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Vibe</span>
-                        <Compass className="w-4 h-4 text-slate-400" />
-                    </div>
-                    <div className="text-2xl font-bold text-slate-900 capitalize">{profile?.preferences?.style}</div>
-                    <div className="text-xs text-slate-400 mt-1 font-medium">Updated just now</div>
-                </div>
-
-                <Link href="/dashboard/create" className="bg-gradient-to-br from-indigo-600 to-violet-700 p-4 rounded-xl border border-indigo-500/50 shadow-md text-white flex flex-col justify-between relative overflow-hidden group cursor-pointer hover:shadow-lg transition-all">
-                    <div className="absolute top-0 right-0 w-20 h-20 bg-white opacity-5 rounded-full blur-2xl transform translate-x-10 -translate-y-10 group-hover:scale-150 transition-transform duration-700" />
-                    <div className="relative z-10">
-                        <div className="flex items-center gap-2 mb-1">
-                            <Plus className="w-4 h-4" />
-                            <span className="text-sm font-bold">New Trip</span>
+                {/* Content */}
+                <div className="relative z-10 p-10 md:p-14 w-full max-w-3xl">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6 }}
+                    >
+                        <div className="flex items-center gap-2 mb-4">
+                            <span className="bg-white/20 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-full border border-white/20 flex items-center gap-1">
+                                <Flame className="w-3 h-3 text-orange-400" />
+                                Ready for adventure?
+                            </span>
                         </div>
-                        <p className="text-[10px] text-indigo-200 leading-tight">Plan a new itinerary with AI.</p>
-                    </div>
-                </Link>
+
+                        <h1 className="text-5xl md:text-6xl font-black text-white leading-tight mb-4 tracking-tight drop-shadow-lg">
+                            Hey, {profile?.displayName?.split(" ")[0] || "Traveler"}. <br />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-300">Where next?</span>
+                        </h1>
+
+                        <p className="text-slate-200 text-lg font-medium mb-8 max-w-lg leading-relaxed shadow-sm">
+                            Your budget of <span className="text-white font-bold">₹{profile?.preferences?.budget?.toLocaleString()}</span> is ready. Let's find you a hidden gem.
+                        </p>
+
+                        {/* Interactive Quick Input */}
+                        <div className="bg-white/10 backdrop-blur-xl p-2 pl-6 rounded-2xl border border-white/20 flex items-center gap-4 transition-all focus-within:bg-white/20 focus-within:border-white/40 focus-within:scale-[1.02] shadow-2xl">
+                            <input
+                                type="text"
+                                value={quickPrompt}
+                                onChange={(e) => setQuickPrompt(e.target.value)}
+                                onKeyDown={(e) => e.key === "Enter" && handleQuickStart()}
+                                placeholder="Type a vibe (e.g., 'Chill beach trip')..."
+                                className="bg-transparent border-none text-white placeholder:text-white/60 text-lg font-medium w-full focus:outline-none"
+                            />
+                            <Button
+                                onClick={handleQuickStart}
+                                disabled={!quickPrompt.trim()}
+                                className="h-12 w-12 rounded-xl bg-white text-indigo-600 hover:bg-indigo-50 hover:scale-105 transition-all shadow-lg flex-shrink-0"
+                            >
+                                <ArrowRight className="w-5 h-5" />
+                            </Button>
+                        </div>
+                    </motion.div>
+                </div>
             </div>
 
-            {/* --- Main Content Split --- */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
-
-                {/* Left Column: Recent Trips & Itineraries (2 cols) */}
-                <div className="lg:col-span-2 space-y-6">
-
-                    {/* Active Trip Section */}
-                    <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-                        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                            <h3 className="font-bold text-slate-900 text-sm">Active Itinerary</h3>
-                            <Button variant="ghost" size="sm" className="h-7 text-xs text-slate-500 font-medium">View All</Button>
+            {/* --- 2. Floating Stats (Glassmorphism) --- */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 -mt-16 relative z-20 px-4">
+                <StatWidget icon={Wallet} label="Budget" value={`₹${profile?.preferences?.budget?.toLocaleString()}`} color="text-emerald-400" />
+                <StatWidget icon={Compass} label="Style" value={profile?.preferences?.style} color="text-violet-400" />
+                <div className="col-span-2 md:col-span-2 bg-slate-900 text-white p-5 rounded-2xl border border-slate-700 shadow-xl flex items-center justify-between group cursor-pointer hover:border-indigo-500 transition-colors"
+                    onClick={() => router.push("/dashboard/explore")}
+                >
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                            <MapIcon className="w-6 h-6 text-white" />
                         </div>
-
-                        {/* Empty State Action */}
-                        <div className="p-8 text-center flex flex-col items-center justify-center min-h-[200px] border-b border-dashed border-slate-200">
-                            <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mb-3">
-                                <MapPin className="w-5 h-5 text-slate-400" />
-                            </div>
-                            <h4 className="text-slate-900 font-bold mb-1">No active trips</h4>
-                            <p className="text-slate-500 text-xs mb-4 max-w-xs">You haven't created any itineraries yet. Use the AI planner to generate one in seconds.</p>
-                            <Link href="/dashboard/create">
-                                <Button size="sm" className="bg-slate-900 text-white hover:bg-slate-800 text-xs font-bold px-4 h-9">
-                                    <Plus className="w-3.5 h-3.5 mr-2" />
-                                    Create Itinerary
-                                </Button>
-                            </Link>
+                        <div>
+                            <p className="font-bold text-lg">Explore Map</p>
+                            <p className="text-slate-400 text-xs">Find places near you</p>
                         </div>
                     </div>
+                    <ArrowRight className="w-5 h-5 text-slate-500 group-hover:text-white transition-colors" />
+                </div>
+            </div>
 
-                    {/* Recent Generations Table */}
-                    <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-                        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-                            <h3 className="font-bold text-slate-900 text-sm">Recent Drafts</h3>
-                            <div className="flex gap-2">
-                                <div className="relative">
-                                    <Search className="w-3 h-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                                    <input type="text" placeholder="Search..." className="h-7 w-32 bg-slate-50 border border-slate-200 rounded-md pl-7 px-2 text-[10px] focus:outline-none focus:border-indigo-500" />
+            {/* --- 3. Inspiration Feed (Horizontal Scroll) --- */}
+            <div>
+                <div className="flex items-center justify-between mb-6 px-2">
+                    <h3 className="text-2xl font-black text-slate-900 tracking-tight">Recent Saves</h3>
+                    <Link href="/dashboard/trips" className="text-sm font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 group">
+                        View All <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                    </Link>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {trips.length > 0 ? trips.slice(0, 3).map((trip, i) => (
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: i * 0.1 }}
+                            key={trip.id}
+                        >
+                            <Link href={`/dashboard/trips/${trip.id}`} className="group block h-full">
+                                <div className="bg-white rounded-[2rem] p-4 border border-slate-100 shadow-sm hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-300 h-full flex flex-col relative overflow-hidden">
+                                    <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
+                                        <Sparkles className="w-24 h-24 text-indigo-600" />
+                                    </div>
+
+                                    <div className="flex justify-between items-start mb-4 relative z-10">
+                                        <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-xl font-black text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                                            {trip.tripName.charAt(0)}
+                                        </div>
+                                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${trip.status === 'draft' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                                            {trip.status || 'Draft'}
+                                        </span>
+                                    </div>
+
+                                    <h4 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-indigo-600 transition-colors line-clamp-1">{trip.tripName}</h4>
+                                    <p className="text-sm text-slate-500 line-clamp-2 mb-4 flex-1">{trip.summary}</p>
+
+                                    <div className="flex items-center justify-between pt-4 border-t border-slate-50">
+                                        <p className="font-bold text-slate-900">₹{trip.totalCost?.toLocaleString()}</p>
+                                        <div className="w-8 h-8 rounded-full border border-slate-100 flex items-center justify-center group-hover:bg-indigo-50 transition-colors">
+                                            <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600" />
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
+                            </Link>
+                        </motion.div>
+                    )) : (
+                        <div className="col-span-3 bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-200 p-12 text-center">
+                            <Sparkles className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                            <p className="text-slate-500 font-medium">Your travel journal is empty.</p>
+                            <p className="text-sm text-slate-400">Start a new chat to plan your first trip!</p>
                         </div>
-
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left text-xs">
-                                <thead className="bg-slate-50/50 text-slate-500 font-semibold border-b border-slate-100">
-                                    <tr>
-                                        <th className="px-6 py-3">Destination</th>
-                                        <th className="px-6 py-3">Dates</th>
-                                        <th className="px-6 py-3">Budget</th>
-                                        <th className="px-6 py-3">Status</th>
-                                        <th className="px-6 py-3 text-right">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100">
-                                    {[1, 2].map((i) => (
-                                        <tr key={i} className="group hover:bg-slate-50/50 transition-colors">
-                                            <td className="px-6 py-3 font-medium text-slate-900 flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-lg bg-slate-100 animate-pulse" />
-                                                <span className="text-slate-400 italic">Draft Job #{i}</span>
-                                            </td>
-                                            <td className="px-6 py-3 text-slate-500">--</td>
-                                            <td className="px-6 py-3 text-slate-500">--</td>
-                                            <td className="px-6 py-3">
-                                                <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-500">
-                                                    Not Started
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-3 text-right">
-                                                <Button variant="ghost" size="icon" className="h-6 w-6 text-slate-400 hover:text-indigo-600">
-                                                    <ArrowUpRight className="w-3.5 h-3.5" />
-                                                </Button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Right Column: Widgets */}
-                <div className="space-y-6">
-
-                    {/* Map Widget */}
-                    <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm h-64 relative group">
-                        <div className="absolute inset-0 bg-slate-100 flex items-center justify-center">
-                            <div className="text-center opacity-40">
-                                <MapIcon className="w-10 h-10 mx-auto text-slate-400 mb-2" />
-                                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Map View</p>
-                            </div>
-                        </div>
-                        {/* Overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end p-6 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <p className="text-white text-xs font-bold">Explore Destinations</p>
-                        </div>
-                    </div>
-
-                    {/* Savings / Cost Estimator Mini Widget */}
-                    <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600">
-                                <CreditCard className="w-5 h-5" />
-                            </div>
-                            <div>
-                                <h4 className="text-sm font-bold text-slate-900">Trip Fund</h4>
-                                <p className="text-[10px] text-slate-500">Estimated savings needed</p>
-                            </div>
-                        </div>
-                        <div className="h-2 bg-slate-100 rounded-full overflow-hidden mb-2">
-                            <div className="h-full bg-emerald-500 w-[0%]" />
-                        </div>
-                        <div className="flex justify-between text-[10px] font-medium text-slate-400">
-                            <span>₹0 saved</span>
-                            <span>Target: ₹{profile?.preferences?.budget?.toLocaleString()}</span>
-                        </div>
-                        <Button variant="outline" size="sm" className="w-full mt-4 h-8 text-xs font-bold">
-                            Connect Wallet
-                        </Button>
-                    </div>
-
-                    {/* Quick Actions List */}
-                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
-                        <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Quick Actions</h4>
-                        <div className="space-y-1">
-                            <Button variant="ghost" className="w-full justify-start h-8 text-xs text-slate-600 font-medium hover:bg-slate-50 hover:text-indigo-600">
-                                <Clock className="w-3.5 h-3.5 mr-2" /> View History
-                            </Button>
-                            <Button variant="ghost" className="w-full justify-start h-8 text-xs text-slate-600 font-medium hover:bg-slate-50 hover:text-indigo-600">
-                                <Calendar className="w-3.5 h-3.5 mr-2" /> Calendar View
-                            </Button>
-                        </div>
-                    </div>
-
+                    )}
                 </div>
             </div>
 
+            {/* Decorative Blur Orbs */}
+            <div className="fixed top-20 right-0 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none -z-10" />
+            <div className="fixed bottom-0 left-0 w-[300px] h-[300px] bg-blue-500/10 rounded-full blur-[80px] pointer-events-none -z-10" />
+
+        </div>
+    )
+}
+
+function StatWidget({ icon: Icon, label, value, color }: any) {
+    return (
+        <div className="bg-white/80 backdrop-blur-md p-4 rounded-2xl border border-white/40 shadow-lg flex flex-col items-center text-center justify-center gap-2 hover:scale-105 transition-transform cursor-default">
+            <Icon className={`w-6 h-6 ${color}`} />
+            <div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{label}</p>
+                <p className="text-sm font-black text-slate-800 truncate px-2">{value}</p>
+            </div>
         </div>
     )
 }

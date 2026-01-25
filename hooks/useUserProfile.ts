@@ -15,6 +15,9 @@ export type UserProfile = {
         budget: number
         style: string
         interests: string[]
+        dietary?: "Veg" | "Non-Veg" | "Vegan" | "Other"
+        allergies?: string
+        bio?: string
     }
 }
 
