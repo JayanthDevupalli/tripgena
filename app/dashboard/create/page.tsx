@@ -632,10 +632,11 @@ function ItineraryCard({ data, onSave }: { data: any, onSave: (data: any) => voi
                                         <div className="w-2 h-2 rounded-full bg-indigo-400 mt-1.5 shrink-0" />
                                         <div>
                                             <span className="font-medium text-slate-700 block mb-0.5">{act.activity}</span>
-                                            <div className="flex gap-3 text-xs text-slate-400">
+                                            <div className="flex flex-wrap gap-3 text-xs text-slate-400">
                                                 <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {act.time}</span>
-                                                {act.cost > 0 && <span className="flex items-center gap-1"><IndianRupee className="w-3 h-3" /> {act.cost}</span>}
+                                                {act.cost > 0 && <span className="flex items-center gap-1">₹ {act.cost}</span>}
                                             </div>
+                                            {act.logistics && <p className="text-[10px] text-slate-400 mt-1 leading-tight">{act.logistics}</p>}
                                         </div>
                                     </div>
                                 ))}

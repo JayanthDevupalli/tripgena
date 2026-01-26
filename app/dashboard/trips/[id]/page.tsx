@@ -12,6 +12,9 @@ import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
 import { Sparkles } from "lucide-react"
 import { useWeather } from "@/hooks/useWeather"
 import { getWeatherIcon } from "@/lib/weather"
+import { TripConcierge } from "@/components/TripConcierge"
+import { LiveItineraryTimeline } from "@/components/LiveItineraryTimeline"
+
 
 // Dynamic Map import
 const TripMap = dynamic(() => import("@/components/TripMap"), {
@@ -320,32 +323,8 @@ export default function TripDetailsPage() {
                                         </div>
 
                                         <div className="space-y-8 relative">
-                                            <div className="absolute left-[27px] top-4 bottom-4 w-0.5 bg-dashed border-l-2 border-slate-200 border-dashed z-0" />
-
-                                            {currentDayData.activities.map((act: any, idx: number) => (
-                                                <div key={idx} className="relative z-10 grid grid-cols-[auto_1fr] gap-6 group">
-                                                    <div className="w-14 h-14 rounded-full bg-white border-4 border-slate-50 shadow-md flex items-center justify-center z-10 relative">
-                                                        <ActivityIcon type={act.type || 'Activity'} />
-                                                    </div>
-                                                    <div className="bg-slate-50/50 hover:bg-white p-6 rounded-3xl border border-slate-100 hover:shadow-lg transition-all group-hover:scale-[1.01] duration-300">
-                                                        <div className="flex justify-between items-start mb-2">
-                                                            <h4 className="font-bold text-slate-900 text-lg">{act.activity}</h4>
-                                                            <span className="text-xs font-bold bg-white text-slate-500 px-3 py-1 rounded-full border border-slate-100 shadow-sm">{act.time}</span>
-                                                        </div>
-                                                        {act.logistics && (
-                                                            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-indigo-100/50 text-indigo-700 rounded-lg text-xs font-bold mb-4">
-                                                                <Navigation className="w-3 h-3" /> {act.logistics}
-                                                            </div>
-                                                        )}
-                                                        <div className="flex items-center gap-6 text-sm font-medium text-slate-500">
-                                                            <span className="flex items-center gap-1.5"><Wallet className="w-4 h-4 text-emerald-500" /> ₹{act.cost}</span>
-                                                            {act.locationName && (
-                                                                <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4 text-rose-500" /> {act.locationName}</span>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ))}
+                                            {/* Replaced static list with Living Timeline */}
+                                            <LiveItineraryTimeline activities={currentDayData.activities} />
                                         </div>
 
                                         <div className="flex items-center justify-between mt-12 pt-8 border-t border-slate-50">
@@ -518,6 +497,9 @@ export default function TripDetailsPage() {
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {/* Smart Concierge Overlay */}
+            <TripConcierge tripContext={trip} />
         </div>
     )
 }

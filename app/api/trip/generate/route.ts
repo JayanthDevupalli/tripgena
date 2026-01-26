@@ -90,15 +90,15 @@ export async function POST(req: Request) {
                 "title": "Arrival & Exploration",
                 "activities": [
                     { 
-                        "time": "Morning", 
+                        "time": "e.g. 09:00 AM", 
                         "activity": "...", 
-                        "cost": number (Total for group), 
+                        "cost": number (Estimated cost per person), 
                         // STRICTLY use one of these types:
                         "type": "Travel" | "Stay" | "Food" | "Activity" | "Other",
                         "locationName": "Specific place name for map",
                         
-                        // NEW: Logistics help
-                        "logistics": "Directions/Tips (e.g. 'Take Bus 404 from Station', '2km walk from main stand')",
+                        // NEW: Logistics help (REQUIRED)
+                        "logistics": "e.g. 'Take Auto from Station (₹50)', 'Walk 500m'",
 
                         "coordinates": { "lat": number, "lng": number } 
                     },
@@ -112,10 +112,16 @@ export async function POST(req: Request) {
       **Rules:**
       1. **REALISTIC STUDENT BUDGET**: Be stingy. Use Sleeper mechanics unless budget is high. Cost comparisons MUST be accurate for ${travelers} people.
       2. **NO HOTELS FOR DAY TRIPS**: If duration is 1 day, Stay cost must be 0.
-      3. **Transport Logic**:
-         - Calculate distance from ${userOrigin} to Destination.
-         - If user selected a specific mode, PRIORITIZE it.
-         - Provide REAL specific names (e.g. "Netravati Express", "VRL Logistics").
+      3. **Transport Logic - CRITICAL**:
+         - **DIRECT CONNECTIVITY CHECK**: You MUST first check for direct trains/buses from **${userOrigin}** to Destination.
+         - **DO NOT** suggest routing through a major hub (like Hyderabad/Secunderabad/Delhi) IF a direct option exists from ${userOrigin}.
+         - If a train/bus stops at ${userOrigin}, THAT is the correct option.
+         - Only suggest a hub if ${userOrigin} has NO direct connectivity.
+         - **Accuracy Enforcement**:
+           - **STATION CODES**: You MUST provide the specific Station Codes for the suggested train (e.g. "Kacheguda (KCG)", "Shadnagar (SHNR)").
+           - **STOP VALIDATION**: Explicitly VERIFY if the suggested train has a *commercial halt* at **${userOrigin}**.
+           - If a train does passes through but does not stop, DO NOT suggest it as a direct option.
+           - If unsure about a stop, clearly state: "Boarding at [Nearest Major Station] recommended as direct trains may not stop at ${userOrigin}".
       4. **Coordinates**: GPS accuracy is critical.
       5. **Accuracy**: Do not hallucinate cheap flights. Be realistic.
     `;
