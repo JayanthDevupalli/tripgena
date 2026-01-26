@@ -49,11 +49,13 @@ export async function POST(req: Request) {
       [
         {
           "name": "Destination Name",
+          "weather_city": "Nearest Major City (for Weather API)",
           "budget": "${budgetLimit}",
           "vibe": "Nature",
           "desc": "Short description.",
           "category": "Hill Station",
-          "image_keyword": "Specific search term"
+          "image_keyword": "Specific search term",
+          "distance": "120 km"
         }
       ]
     `;

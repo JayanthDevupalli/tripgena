@@ -18,6 +18,10 @@ export type UserProfile = {
         dietary?: "Veg" | "Non-Veg" | "Vegan" | "Other"
         allergies?: string
         bio?: string
+        pace?: string
+        companions?: string
+        accommodation?: string
+        transportation?: string
     }
 }
 

@@ -10,6 +10,8 @@ import { ArrowLeft, MapPin, Loader2, Clock, Train, Bus, Car, Plane, Hotel, Camer
 import dynamic from "next/dynamic"
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
 import { Sparkles } from "lucide-react"
+import { useWeather } from "@/hooks/useWeather"
+import { getWeatherIcon } from "@/lib/weather"
 
 // Dynamic Map import
 const TripMap = dynamic(() => import("@/components/TripMap"), {
@@ -29,6 +31,7 @@ export default function TripDetailsPage() {
     const [showMap, setShowMap] = useState(false)
     const [loading, setLoading] = useState(true)
     const [activeDay, setActiveDay] = useState(1)
+    const { weather } = useWeather(trip?.destination)
 
     // --- Smart Packing Logic State ---
     const [newItem, setNewItem] = useState("")
@@ -383,27 +386,40 @@ export default function TripDetailsPage() {
                             </div>
                         </div>
 
-                        {/* 2. Weather Widget (Mocked) */}
+                        {/* 2. Weather Widget (Real-time) */}
                         <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl p-6 text-white shadow-lg shadow-blue-500/20 relative overflow-hidden">
                             <div className="absolute top-0 right-0 p-16 bg-white/10 rounded-full blur-2xl -mr-8 -mt-8" />
                             <div className="relative z-10">
-                                <h4 className="text-xs font-bold text-blue-100 uppercase tracking-wider mb-4">Forecast</h4>
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <div className="text-4xl font-black mb-1">28°C</div>
-                                        <p className="font-medium text-blue-100 flex items-center gap-1"><Sun className="w-4 h-4" /> Sunny</p>
-                                    </div>
-                                    <Sun className="w-12 h-12 text-yellow-300 animate-pulse-slow" />
-                                </div>
-                                <div className="mt-6 flex justify-between text-center gap-2">
-                                    {['Mon', 'Tue', 'Wed'].map(d => (
-                                        <div key={d} className="bg-white/10 rounded-xl p-2 flex-1 backdrop-blur-sm">
-                                            <p className="text-[10px] font-bold opacity-80 mb-1">{d}</p>
-                                            <Cloud className="w-4 h-4 mx-auto mb-1 opacity-80" />
-                                            <p className="text-xs font-bold">26°</p>
+                                <h4 className="text-xs font-bold text-blue-100 uppercase tracking-wider mb-4">Forecast for {trip.destination}</h4>
+                                {weather ? (
+                                    <>
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <div className="text-4xl font-black mb-1">{weather.temp}°C</div>
+                                                <p className="font-medium text-blue-100 flex items-center gap-1">
+                                                    <weather.icon className="w-4 h-4" /> {weather.description}
+                                                </p>
+                                            </div>
+                                            <weather.icon className="w-12 h-12 text-yellow-300 animate-pulse-slow" />
                                         </div>
-                                    ))}
-                                </div>
+                                        <div className="mt-6 flex justify-between text-center gap-2">
+                                            {weather.forecast?.map((day: any, i: number) => {
+                                                const ForecastIcon = getWeatherIcon(day.icon)
+                                                return (
+                                                    <div key={i} className="bg-white/10 rounded-xl p-2 flex-1 backdrop-blur-sm">
+                                                        <p className="text-[10px] font-bold opacity-80 mb-1">{day.day}</p>
+                                                        <ForecastIcon className="w-4 h-4 mx-auto mb-1 opacity-80" />
+                                                        <p className="text-xs font-bold">{day.temp}°</p>
+                                                    </div>
+                                                )
+                                            })}
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="flex items-center justify-center h-32">
+                                        <Loader2 className="w-6 h-6 animate-spin text-white/50" />
+                                    </div>
+                                )}
                             </div>
                         </div>
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { MapPin, ArrowUpRight, Loader2, Navigation, Search, CloudSun, Wind, Droplets } from "lucide-react"
+import { MapPin, ArrowUpRight, Loader2, Navigation, Search, CloudSun, Wind, Droplets, Globe } from "lucide-react"
 import Link from "next/link"
 import { useUserProfile } from "@/hooks/useUserProfile"
 import { useRouter } from "next/navigation"
@@ -27,7 +27,7 @@ const categoryImages: Record<string, string> = {
 
 // Interactive Story Card
 function StoryCard({ dest, onClick }: { dest: any, onClick: () => void }) {
-    const { weather, loading } = useWeather(dest.name)
+    const { weather, loading } = useWeather(dest.weather_city || dest.name)
     const WeatherIcon = weather?.icon || CloudSun
 
     return (
@@ -48,6 +48,18 @@ function StoryCard({ dest, onClick }: { dest: any, onClick: () => void }) {
             {/* Gradient Overlay */}
             <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent" />
 
+            {/* Top Left Badges (Budget & Distance) */}
+            <div className="absolute top-4 left-4 flex flex-col gap-2 z-20">
+                <span className="self-start bg-black/50 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-full border border-white/10 shadow-sm">
+                    ~{dest.budget}
+                </span>
+                {dest.distance && (
+                    <span className="self-start bg-emerald-500/90 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm flex items-center gap-1">
+                        <MapPin className="w-3 h-3" /> {dest.distance}
+                    </span>
+                )}
+            </div>
+
             {/* Weather Badge (Floating Glass) */}
             <div className="absolute top-4 right-4 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-2 flex flex-col items-center text-white shadow-lg z-20">
                 {loading ? (
@@ -62,12 +74,9 @@ function StoryCard({ dest, onClick }: { dest: any, onClick: () => void }) {
 
             {/* Content Content */}
             <div className="absolute bottom-0 left-0 right-0 p-6 text-white z-10">
-                <div className="flex items-center gap-2 mb-2">
-                    <span className="bg-indigo-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm border border-indigo-400">
+                <div className="mb-2">
+                    <span className="inline-block bg-indigo-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm border border-indigo-400 max-w-[200px] truncate">
                         {dest.category}
-                    </span>
-                    <span className="bg-white/20 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
-                        ~{dest.budget}
                     </span>
                 </div>
 
@@ -75,7 +84,7 @@ function StoryCard({ dest, onClick }: { dest: any, onClick: () => void }) {
                     {dest.name}
                 </h3>
 
-                <p className="text-sm text-slate-200 line-clamp-2 leading-relaxed opacity-90 mb-4">
+                <p className="text-xs text-slate-200 line-clamp-2 leading-relaxed opacity-90 mb-4 font-medium">
                     {dest.desc}
                 </p>
 
@@ -127,6 +136,19 @@ export default function ExplorePage() {
     }
 
     const fetchSuggestions = async () => {
+        // Check cache first
+        const cached = localStorage.getItem("explore_cache")
+        if (cached) {
+            try {
+                const { origin: cachedOrigin, destinations: cachedDestinations } = JSON.parse(cached)
+                if (cachedOrigin.toLowerCase() === origin.trim().toLowerCase() && cachedDestinations.length > 0) {
+                    setDestinations(cachedDestinations)
+                    setHasSearched(true)
+                    return
+                }
+            } catch (e) { }
+        }
+
         setLoading(true)
         setHasSearched(true)
         try {
@@ -165,9 +187,9 @@ export default function ExplorePage() {
                     <motion.h1
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
-                        className="text-4xl font-black text-slate-900 tracking-tighter mb-2"
+                        className="text-4xl font-black text-slate-900 tracking-tighter mb-2 flex items-center gap-3"
                     >
-                        Find your Vibe 🌍
+                        Find your Vibe <Globe className="w-8 h-8 text-indigo-600 animate-spin-slow" />
                     </motion.h1>
                     <p className="text-slate-500 font-medium text-lg">Curated getaways just overnight from you.</p>
                 </div>
