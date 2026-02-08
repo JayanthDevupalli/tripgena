@@ -6,7 +6,7 @@ import { doc, getDoc, updateDoc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { useAuth } from "@/components/auth/AuthProvider"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, MapPin, Loader2, Clock, Train, Bus, Car, Plane, Hotel, Camera, Utensils, Navigation, ChevronLeft, ChevronRight, Wallet, Sun, Cloud, CloudRain, CheckSquare, FileText, Download, Share2, Plus, Trash2 } from "lucide-react"
+import { ArrowLeft, MapPin, Loader2, Clock, Train, Bus, Car, Plane, Hotel, Camera, Utensils, Navigation, ChevronLeft, ChevronRight, Wallet, Sun, Cloud, CloudRain, CheckSquare, FileText, Download, Share2, Plus, Trash2, ArrowDown, CheckCircle2 } from "lucide-react"
 import dynamic from "next/dynamic"
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
 import { Sparkles } from "lucide-react"
@@ -233,7 +233,7 @@ export default function TripDetailsPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8">
 
                     {/* LEFT COLUMN: Itinerary & Details */}
-                    <div className="space-y-8">
+                    <div className="space-y-8 min-w-0">
                         {/* Stats Grid */}
                         <div className="grid grid-cols-3 gap-3">
                             <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-lg shadow-slate-200/50 flex flex-col items-center justify-center text-center">
@@ -261,214 +261,267 @@ export default function TripDetailsPage() {
                             </p>
                         </div>
 
-                        {/* Selected Transport */}
+                        {/* Selected Transport - Royal Card */}
                         {trip.selectedTransport && (
-                            <div className="bg-indigo-600 text-white p-6 rounded-[2rem] shadow-xl shadow-indigo-500/20 relative overflow-hidden">
-                                <div className="absolute top-0 right-0 p-24 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10" />
-                                <div className="relative z-10 flex items-center justify-between">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/20">
+                            <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 text-white shadow-2xl shadow-slate-900/20 group">
+                                <div className="absolute inset-0 bg-gradient-to-r from-indigo-900 to-slate-900 opacity-90" />
+                                <div className="absolute top-0 right-0 p-32 bg-indigo-500/20 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-indigo-500/30 transition-colors duration-700" />
+
+                                <div className="relative z-10 p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-8">
+                                    <div className="flex items-center gap-6">
+                                        <div className="w-20 h-20 rounded-3xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/10 shadow-inner">
                                             <ModeIcon mode={trip.selectedTransport.mode} />
                                         </div>
                                         <div>
-                                            <p className="text-indigo-200 text-xs font-bold uppercase tracking-wider mb-1">Travel Mode</p>
-                                            <h3 className="text-2xl font-black">{trip.selectedTransport.mode}</h3>
-                                            <p className="text-indigo-100 text-sm font-medium opacity-80">{trip.selectedTransport.details}</p>
+                                            <p className="text-indigo-300 text-xs font-bold uppercase tracking-widest mb-2">Primary Transport</p>
+                                            <h3 className="text-3xl font-black tracking-tight">{trip.selectedTransport.mode}</h3>
+                                            <p className="text-indigo-100/80 text-lg font-medium mt-1">{trip.selectedTransport.details}</p>
                                         </div>
                                     </div>
-                                    <div className="text-right">
-                                        <p className="text-3xl font-black">₹{trip.selectedTransport.cost}</p>
-                                        <p className="text-indigo-200 text-sm font-medium">{trip.selectedTransport.duration}</p>
+                                    <div className="text-center md:text-right bg-white/5 p-4 rounded-2xl backdrop-blur-sm border border-white/5">
+                                        <p className="text-sm font-medium text-indigo-200 mb-1">Estimated Cost</p>
+                                        <p className="text-3xl font-black tracking-tight text-white">₹{trip.selectedTransport.cost}</p>
+                                        <div className="h-0.5 w-full bg-white/10 my-3" />
+                                        <p className="text-sm font-bold text-white flex items-center justify-end gap-2">
+                                            <Clock className="w-4 h-4 text-indigo-400" /> {trip.selectedTransport.duration}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
                         )}
 
-                        {/* --- DAY TABS --- */}
-                        <div>
-                            <div className="flex items-center gap-2 overflow-x-auto pb-4 custom-scrollbar sticky top-4 z-40 bg-slate-50/95 backdrop-blur py-2 -mx-4 px-4 lg:mx-0 lg:px-0 lg:bg-transparent lg:backdrop-filter-none">
+                        {/* --- DAY TABS NAVIGATION --- */}
+                        <div className="relative z-10 sticky top-4">
+                            <div className="absolute inset-0 bg-white/80 backdrop-blur-xl rounded-full shadow-lg shadow-slate-200/50 border border-slate-100/50" />
+
+                            {/* Scroll Arrows - Desktop */}
+                            {trip.itinerary.length > 7 && (
+                                <>
+                                    <button
+                                        onClick={() => document.getElementById('day-tabs-container')?.scrollBy({ left: -200, behavior: 'smooth' })}
+                                        className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center hover:bg-slate-50 text-slate-600 transition-all border border-slate-100"
+                                    >
+                                        <ChevronLeft className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                        onClick={() => document.getElementById('day-tabs-container')?.scrollBy({ left: 200, behavior: 'smooth' })}
+                                        className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center hover:bg-slate-50 text-slate-600 transition-all border border-slate-100"
+                                    >
+                                        <ChevronRight className="w-4 h-4" />
+                                    </button>
+                                </>
+                            )}
+
+                            {/* Tabs Container */}
+                            <div
+                                id="day-tabs-container"
+                                className={`relative z-10 flex items-center gap-2 overflow-x-auto p-2 scrollbar-hide scroll-smooth ${trip.itinerary.length > 7 ? 'mx-10' : ''
+                                    }`}
+                                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
+                            >
                                 {trip.itinerary.map((day: any) => (
                                     <button
                                         key={day.day}
                                         onClick={() => handleDayChange(day.day)}
-                                        className={`shrink-0 px-6 py-3 rounded-full font-bold text-sm transition-all shadow-sm border ${activeDay === day.day
-                                            ? "bg-indigo-600 text-white border-indigo-600 shadow-indigo-200"
-                                            : "bg-white text-slate-500 border-slate-200 hover:border-indigo-300 hover:text-indigo-600"
+                                        className={`shrink-0 px-6 py-2.5 rounded-full font-bold text-sm transition-all duration-300 ${activeDay === day.day
+                                            ? "bg-slate-900 text-white shadow-lg shadow-slate-900/30 scale-105"
+                                            : "text-slate-500 hover:text-slate-900 hover:bg-slate-100/50"
                                             }`}
                                     >
                                         Day {day.day}
                                     </button>
                                 ))}
                             </div>
-
-                            {/* --- ACTIVE DAY CONTENT --- */}
-                            <AnimatePresence mode="wait">
-                                {currentDayData && (
-                                    <motion.div
-                                        key={activeDay}
-                                        initial={{ opacity: 0, x: 20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        exit={{ opacity: 0, x: -20 }}
-                                        transition={{ duration: 0.3 }}
-                                        className="bg-white rounded-[2.5rem] p-6 lg:p-8 shadow-xl shadow-slate-200/50 border border-slate-100 min-h-[400px]"
-                                    >
-                                        <div className="flex items-center gap-4 mb-8 pb-6 border-b border-slate-50">
-                                            <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-black text-2xl shadow-sm">
-                                                {currentDayData.day}
-                                            </div>
-                                            <div>
-                                                <h3 className="text-2xl font-black text-slate-900">{currentDayData.title}</h3>
-                                                <p className="text-slate-400 font-medium">Daily Plan</p>
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-8 relative">
-                                            {/* Replaced static list with Living Timeline */}
-                                            <LiveItineraryTimeline activities={currentDayData.activities} />
-                                        </div>
-
-                                        <div className="flex items-center justify-between mt-12 pt-8 border-t border-slate-50">
-                                            <Button
-                                                variant="ghost"
-                                                onClick={() => handleDayChange(Math.max(1, activeDay - 1))}
-                                                disabled={activeDay === 1}
-                                                className="text-slate-400 hover:text-slate-900"
-                                            >
-                                                <ChevronLeft className="w-4 h-4 mr-2" /> Previous Day
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                onClick={() => handleDayChange(Math.min(trip.itinerary.length, activeDay + 1))}
-                                                disabled={activeDay === trip.itinerary.length}
-                                                className="text-slate-400 hover:text-slate-900"
-                                            >
-                                                Next Day <ChevronRight className="w-4 h-4 ml-2" />
-                                            </Button>
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
                         </div>
+
+                        {/* --- ACTIVE DAY CONTENT --- */}
+                        <AnimatePresence mode="wait">
+                            {currentDayData && (
+                                <motion.div
+                                    key={activeDay}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -20 }}
+                                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                                    className="bg-white rounded-[3rem] p-8 md:p-12 shadow-2xl shadow-slate-200/50 border border-slate-100 min-h-[500px] relative overflow-hidden"
+                                >
+                                    {/* Decorative Background Blur */}
+                                    <div className="absolute top-0 right-0 w-full h-64 bg-gradient-to-b from-slate-50/80 to-transparent pointer-events-none" />
+
+                                    <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-6 mb-12 border-b border-slate-100 pb-8">
+                                        <div className="w-20 h-20 rounded-[2rem] bg-slate-900 text-white flex items-center justify-center font-black text-3xl shadow-xl shadow-slate-900/20 rotate-3">
+                                            {currentDayData.day}
+                                        </div>
+                                        <div>
+                                            <p className="text-slate-400 font-bold uppercase tracking-widest text-xs mb-2">Daily Agenda</p>
+                                            <h3 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight leading-tight">
+                                                {currentDayData.title}
+                                            </h3>
+                                        </div>
+                                    </div>
+
+                                    <div className="relative z-10">
+                                        <LiveItineraryTimeline activities={currentDayData.activities} />
+                                    </div>
+
+                                    <div className="flex items-center justify-between mt-16 pt-8 border-t border-slate-50 relative z-10">
+                                        <Button
+                                            variant="ghost"
+                                            onClick={() => handleDayChange(Math.max(1, activeDay - 1))}
+                                            disabled={activeDay === 1}
+                                            className="text-slate-400 hover:text-slate-900 hover:bg-slate-50 rounded-full px-6"
+                                        >
+                                            <ChevronLeft className="w-4 h-4 mr-2" /> Previous
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            onClick={() => handleDayChange(Math.min(trip.itinerary.length, activeDay + 1))}
+                                            disabled={activeDay === trip.itinerary.length}
+                                            className="text-slate-400 hover:text-slate-900 hover:bg-slate-50 rounded-full px-6"
+                                        >
+                                            Next <ChevronRight className="w-4 h-4 ml-2" />
+                                        </Button>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
 
                     {/* RIGHT COLUMN: Utilities Sidebar */}
                     <div className="space-y-6">
 
-                        {/* 1. Map Card (Small) */}
-                        <div onClick={() => setShowMap(true)} className="group bg-white rounded-3xl p-2 border border-slate-100 shadow-lg shadow-slate-200/50 cursor-pointer transition-transform hover:scale-[1.02]">
-                            <div className="h-40 bg-slate-100 rounded-2xl relative overflow-hidden">
-                                <div className="absolute inset-0 flex items-center justify-center bg-slate-900/10 group-hover:bg-slate-900/20 transition-colors">
-                                    <div className="bg-white/90 backdrop-blur px-4 py-2 rounded-full font-bold text-xs shadow-sm flex items-center gap-2">
-                                        <MapPin className="w-3 h-3 text-indigo-600" /> View Map
-                                    </div>
+                        {/* 1. Map Card (Small) - Premium Preview */}
+                        <div onClick={() => setShowMap(true)} className="group relative h-48 rounded-[2rem] overflow-hidden cursor-pointer shadow-lg shadow-slate-200/50 border border-slate-100">
+                            <div className="absolute inset-0 bg-slate-100 transition-transform duration-700 group-hover:scale-110">
+                                {/* Placeholder map pattern or image */}
+                                <div className="absolute inset-0 opacity-50 bg-[url('https://api.mapbox.com/styles/v1/mapbox/light-v10/static/0,0,2,0/400x400')] bg-cover bg-center grayscale group-hover:grayscale-0 transition-all duration-500" />
+                            </div>
+                            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent" />
+                            <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
+                                <span className="text-white font-bold text-sm">Trip Map</span>
+                                <div className="bg-white text-slate-900 px-3 py-1.5 rounded-full text-xs font-bold shadow-md flex items-center gap-1.5 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                                    <MapPin className="w-3 h-3" /> View
                                 </div>
                             </div>
                         </div>
 
-                        {/* 2. Weather Widget (Real-time) */}
-                        <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl p-6 text-white shadow-lg shadow-blue-500/20 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 p-16 bg-white/10 rounded-full blur-2xl -mr-8 -mt-8" />
-                            <div className="relative z-10">
-                                <h4 className="text-xs font-bold text-blue-100 uppercase tracking-wider mb-4">Forecast for {trip.destination}</h4>
-                                {weather ? (
-                                    <>
-                                        <div className="flex items-center justify-between">
-                                            <div>
-                                                <div className="text-4xl font-black mb-1">{weather.temp}°C</div>
-                                                <p className="font-medium text-blue-100 flex items-center gap-1">
-                                                    <weather.icon className="w-4 h-4" /> {weather.description}
-                                                </p>
-                                            </div>
-                                            <weather.icon className="w-12 h-12 text-yellow-300 animate-pulse-slow" />
+                        {/* 2. Weather Widget (Real-time) - Glass Design */}
+                        <div className="bg-gradient-to-br from-blue-500/5 to-indigo-500/5 backdrop-blur-sm rounded-[2.5rem] p-8 border border-blue-100/50 shadow-xl shadow-blue-500/5 relative overflow-hidden group hover:border-blue-200 transition-colors">
+                            <div className="absolute top-0 right-0 p-20 bg-blue-100/30 rounded-full blur-3xl -mr-10 -mt-10 group-hover:bg-blue-200/30 transition-colors" />
+
+                            <h4 className="flex items-center gap-2 text-xs font-bold text-blue-900/60 uppercase tracking-widest mb-6 relative z-10">
+                                <span className="w-1.5 h-1.5 rounded-full bg-blue-400" /> Forecast
+                            </h4>
+
+                            {weather ? (
+                                <div className="relative z-10">
+                                    <div className="flex items-start justify-between mb-8">
+                                        <div>
+                                            <div className="text-5xl font-black text-slate-800 tracking-tighter mb-1">{weather.temp}°</div>
+                                            <p className="font-medium text-slate-500 flex items-center gap-1.5 capitalize">
+                                                {weather.description}
+                                            </p>
                                         </div>
-                                        <div className="mt-6 flex justify-between text-center gap-2">
-                                            {weather.forecast?.map((day: any, i: number) => {
-                                                const ForecastIcon = getWeatherIcon(day.icon)
-                                                return (
-                                                    <div key={i} className="bg-white/10 rounded-xl p-2 flex-1 backdrop-blur-sm">
-                                                        <p className="text-[10px] font-bold opacity-80 mb-1">{day.day}</p>
-                                                        <ForecastIcon className="w-4 h-4 mx-auto mb-1 opacity-80" />
-                                                        <p className="text-xs font-bold">{day.temp}°</p>
-                                                    </div>
-                                                )
-                                            })}
+                                        <div className="bg-white p-3 rounded-2xl shadow-sm border border-blue-50 text-blue-500">
+                                            <weather.icon className="w-8 h-8" />
                                         </div>
-                                    </>
-                                ) : (
-                                    <div className="flex items-center justify-center h-32">
-                                        <Loader2 className="w-6 h-6 animate-spin text-white/50" />
                                     </div>
-                                )}
-                            </div>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {weather.forecast?.map((day: any, i: number) => {
+                                            const ForecastIcon = getWeatherIcon(day.icon)
+                                            return (
+                                                <div key={i} className="flex flex-col items-center bg-white/60 p-3 rounded-2xl border border-white/50">
+                                                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">{day.day}</p>
+                                                    <ForecastIcon className="w-4 h-4 text-slate-600 mb-2" />
+                                                    <p className="text-xs font-black text-slate-700">{day.temp}°</p>
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex items-center justify-center h-32">
+                                    <Loader2 className="w-6 h-6 animate-spin text-blue-300" />
+                                </div>
+                            )}
                         </div>
 
-                        {/* 3. Packing List (Interactive) */}
-                        <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-xl shadow-slate-200/20">
-                            <h4 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
-                                <CheckSquare className="w-5 h-5 text-indigo-500" /> Smart Packing
+                        {/* 3. Packing List (Interactive) - Clean List */}
+                        <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-xl shadow-slate-200/30">
+                            <h4 className="font-bold text-slate-900 mb-6 flex items-center gap-2">
+                                <div className="p-1.5 bg-indigo-50 rounded-lg text-indigo-600">
+                                    <CheckSquare className="w-4 h-4" />
+                                </div>
+                                Smart Packing
                             </h4>
-                            <div className="space-y-3">
+                            <div className="space-y-2 mb-6 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                                 {trip.packingList?.map((p: any, i: number) => (
-                                    <div key={i} className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100 group">
+                                    <div key={i} className="group flex items-center gap-3 p-3 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer" onClick={() => togglePackingItem(i)}>
+                                        <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all duration-300 ${p.checked ? "bg-indigo-600 border-indigo-600" : "bg-white border-slate-300 group-hover:border-indigo-400"}`}>
+                                            {p.checked && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
+                                        </div>
+                                        <span className={`flex-1 text-sm font-medium transition-colors ${p.checked ? "text-slate-400 line-through" : "text-slate-700"}`}>{p.item}</span>
                                         <button
-                                            onClick={() => togglePackingItem(i)}
-                                            className={`w-5 h-5 rounded-md border flex items-center justify-center transition-colors ${p.checked ? "bg-indigo-500 border-indigo-500" : "bg-white border-slate-300 hover:border-indigo-400"}`}
+                                            onClick={(e) => { e.stopPropagation(); removePackingItem(i); }}
+                                            className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-red-50 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
                                         >
-                                            {p.checked && <span className="text-white text-xs">✓</span>}
-                                        </button>
-                                        <span className={`flex-1 text-sm font-bold truncate ${p.checked ? "text-slate-400 line-through" : "text-slate-700"}`}>{p.item}</span>
-                                        <button onClick={() => removePackingItem(i)} className="text-slate-300 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <Trash2 className="w-4 h-4" />
+                                            <Trash2 className="w-3.5 h-3.5" />
                                         </button>
                                     </div>
                                 ))}
                             </div>
 
                             {isAddingItem ? (
-                                <div className="mt-4 flex gap-2">
+                                <div className="flex gap-2 animate-in slide-in-from-bottom-2 fade-in duration-200">
                                     <input
                                         type="text"
                                         value={newItem}
                                         onChange={(e) => setNewItem(e.target.value)}
                                         onKeyDown={(e) => e.key === 'Enter' && addPackingItem()}
-                                        placeholder="Add item..."
+                                        placeholder="Add new item..."
                                         autoFocus
-                                        className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                                        className="flex-1 bg-slate-50 border-0 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500/20 text-slate-700 placeholder:text-slate-400"
                                     />
-                                    <Button size="sm" onClick={addPackingItem} className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg">Add</Button>
+                                    <Button size="icon" onClick={addPackingItem} className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl h-auto aspect-square">
+                                        <ArrowDown className="w-4 h-4 -rotate-90" />
+                                    </Button>
                                 </div>
                             ) : (
                                 <Button
                                     variant="ghost"
                                     onClick={() => setIsAddingItem(true)}
-                                    className="w-full mt-4 text-indigo-600 text-xs font-bold hover:bg-indigo-50"
+                                    className="w-full justify-start text-slate-500 hover:text-indigo-600 hover:bg-indigo-50/50 rounded-xl px-4 h-11"
                                 >
-                                    + Add Item
+                                    <span className="w-5 h-5 rounded-full border border-current mr-3 flex items-center justify-center text-[10px]">+</span>
+                                    Add Item
                                 </Button>
                             )}
                         </div>
 
-                        {/* 4. Docs Actions */}
-                        <div className="grid grid-cols-2 gap-3">
-                            <Button variant="outline" className="h-14 rounded-2xl border-slate-200 hover:border-indigo-200 hover:bg-indigo-50 text-slate-600 hover:text-indigo-600 flex flex-col items-center justify-center gap-1">
-                                <FileText className="w-5 h-5" />
-                                <span className="text-[10px] font-bold uppercase">Tickets</span>
+                        {/* 4. Docs Actions - Outline Buttons */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <Button variant="outline" className="h-24 rounded-[2rem] border-slate-200 hover:border-indigo-200 hover:bg-indigo-50/30 text-slate-600 hover:text-indigo-600 flex flex-col items-center justify-center gap-3 transition-all duration-300 group">
+                                <div className="w-10 h-10 rounded-full bg-slate-50 group-hover:bg-white flex items-center justify-center transition-colors">
+                                    <FileText className="w-5 h-5" />
+                                </div>
+                                <span className="text-xs font-bold uppercase tracking-wider">Tickets</span>
                             </Button>
                             <Button
                                 variant="outline"
                                 onClick={handleShare}
-                                className="h-14 rounded-2xl border-slate-200 hover:border-indigo-200 hover:bg-indigo-50 text-slate-600 hover:text-indigo-600 flex flex-col items-center justify-center gap-1"
+                                className="h-24 rounded-[2rem] border-slate-200 hover:border-indigo-200 hover:bg-indigo-50/30 text-slate-600 hover:text-indigo-600 flex flex-col items-center justify-center gap-3 transition-all duration-300 group"
                             >
-                                <Share2 className="w-5 h-5" />
-                                <span className="text-[10px] font-bold uppercase">Share</span>
+                                <div className="w-10 h-10 rounded-full bg-slate-50 group-hover:bg-white flex items-center justify-center transition-colors">
+                                    <Share2 className="w-5 h-5" />
+                                </div>
+                                <span className="text-xs font-bold uppercase tracking-wider">Share</span>
                             </Button>
                         </div>
-
                     </div>
                 </div>
             </div>
 
-            {/* 4. Map Overlay (Floating button removed in favor of sidebar widget, OR keep focused map) */}
+            {/* 4. Map Overlay */}
             <AnimatePresence>
                 {showMap && (
                     <motion.div
